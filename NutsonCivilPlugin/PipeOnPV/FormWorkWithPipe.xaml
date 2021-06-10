@@ -1,0 +1,71 @@
+﻿<Window x:Class="NutsonCivilPlugin.PipeOnPV.FormWorkWithPipe"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:NutsonCivilPlugin.PipeOnPV"
+             mc:Ignorable="d" 
+             Background="AliceBlue" MinWidth="400" MinHeight="300" 
+             WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight" Topmost="True">
+    <StackPanel>
+        <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft" >
+            <Button x:Name="BtSelectPV"  Margin="5" Click="BtSelectPV_Click" >
+                <TextBlock Text="Выбрать вид профиля" TextWrapping="Wrap" TextAlignment="Center"/>
+            </Button>
+            <TextBlock x:Name="TbPVName"  Margin="5" TextWrapping="Wrap" MinWidth="250" 
+                       Background="LightYellow" Text="{Binding Path=ProfileView.Name}" 
+                       TextAlignment="Center"  />
+        </StackPanel>
+
+        <TabControl >
+            <TabItem Header="Трубопроводы">
+                <ListBox  x:Name="Pipes" MinHeight="200"  Margin="10" SelectionMode="Extended">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Тип: " Foreground="Gray"/>
+                                <TextBlock Text="{Binding Path=Part.Domain}" Width="30" />
+                                <TextBlock Text="  Имя: " Foreground="Gray"/>
+                                <TextBlock Text="{Binding Path=Part.Name}"  Width="100"/>
+
+                                <ComboBox x:Name="pipeFamilyType" 
+                                          ItemsSource="{Binding Path=ListPartFamilyTypes}" 
+                                          SelectedItem="{Binding Path=PartFamily, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                          
+                                          SelectionChanged="ComboBox_SelectionChanged"/>
+                                
+                                <ComboBox x:Name="pipePartSize" 
+                                          ItemsSource="{Binding Path=ListPartSizes}" 
+                                          SelectedItem="{Binding Path=PartSize , Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                          SelectionChanged="pipePartSize_SelectionChanged"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+            </TabItem>
+            
+            <TabItem Header="Колодцы">
+                <ListBox  x:Name="Structures" MinHeight="200"  Margin="10" SelectionMode="Extended"
+>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Тип: " Foreground="Gray"/>
+                                <TextBlock Text="{Binding Path=Part.Domain}" Width="30" />
+                                <TextBlock Text="  Имя: " Foreground="Gray"/>
+                                <TextBlock Text="{Binding Path=Part.Name}"  Width="100"/>
+
+                                <ComboBox ItemsSource="{Binding Path=ListPartFamilyTypes}" SelectedItem="{Binding Path=PartFamily}"/>
+                                <ComboBox ItemsSource="{Binding Path=ListPartSizes}" SelectedItem="{Binding Path=PartSize}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+            </TabItem>
+        </TabControl>
+        
+
+    </StackPanel>
+</Window>
