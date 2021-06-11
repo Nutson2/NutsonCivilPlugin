@@ -53,7 +53,6 @@ namespace NutsonCivilPlugin.PipeOnPV
             set 
             { 
                 partFamily = value;
-
                 ListPartSizes= partSettings[partFamily];
             }
         }

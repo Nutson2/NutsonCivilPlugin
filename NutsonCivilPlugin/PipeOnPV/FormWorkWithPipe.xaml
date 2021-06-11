@@ -37,7 +37,7 @@
                                 <ComboBox x:Name="pipePartSize" 
                                           ItemsSource="{Binding Path=ListPartSizes}" 
                                           SelectedItem="{Binding Path=PartSize , Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                          SelectionChanged="pipePartSize_SelectionChanged"/>
+                                          SelectionChanged="partSize_SelectionChanged"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -56,8 +56,14 @@
                                 <TextBlock Text="  Имя: " Foreground="Gray"/>
                                 <TextBlock Text="{Binding Path=Part.Name}"  Width="100"/>
 
-                                <ComboBox ItemsSource="{Binding Path=ListPartFamilyTypes}" SelectedItem="{Binding Path=PartFamily}"/>
-                                <ComboBox ItemsSource="{Binding Path=ListPartSizes}" SelectedItem="{Binding Path=PartSize}"/>
+                                <ComboBox x:Name="structureFamilyType"
+                                          ItemsSource="{Binding Path=ListPartFamilyTypes}" 
+                                          SelectedItem="{Binding Path=PartFamily, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                          SelectionChanged="ComboBox_SelectionChanged"/>
+                                
+                                <ComboBox ItemsSource="{Binding Path=ListPartSizes}"
+                                          SelectedItem="{Binding Path=PartSize, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                          SelectionChanged="partSize_SelectionChanged"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
