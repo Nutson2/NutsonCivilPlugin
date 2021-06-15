@@ -112,6 +112,7 @@
     </Compile>
     <Compile Include="PipeOnPV\Model.cs" />
     <Compile Include="PipeOnPV\NetworkSettings.cs" />
+    <Compile Include="PipeOnPV\ViewModelPipeOnPV.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
