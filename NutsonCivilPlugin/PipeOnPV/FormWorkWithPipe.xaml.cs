@@ -41,7 +41,7 @@ namespace NutsonCivilPlugin.PipeOnPV
             this.Show();
         }
 
-        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void FamilyType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ComboBox cmbxFamilyType = (ComboBox)sender;
             ListBox listBox;
@@ -55,24 +55,19 @@ namespace NutsonCivilPlugin.PipeOnPV
                 listBox = Structures;
             }
 
+            Model el = (Model)((ListBoxItem)listBox.ContainerFromElement(cmbxFamilyType)).Content;
+            if (!listBox.SelectedItems.Contains(el)) { listBox.SelectedItems.Add(el); }
 
-            if (listBox.SelectedItems.Count>0)
+            foreach (Model modelItem in listBox.SelectedItems)
             {
-                PipeOnPV.SetPartFamily(listBox.SelectedItems,(string)cmbxFamilyType.SelectedItem,String.Empty);
+                modelItem.PartFamily = (string)cmbxFamilyType.SelectedItem;
+                var cmbxPartSize=((ComboBox)((StackPanel)cmbxFamilyType.Parent).Children[5]).ItemsSource;
+                modelItem.PartSize = modelItem.ListPartSizes[0];
             }
-            else
-            {
-                Model el = (Model)((ListBoxItem)listBox.ContainerFromElement(cmbxFamilyType)).Content;
-                PipeOnPV.SetPartFamily(new List<Model> { el }, (string)cmbxFamilyType.SelectedItem, String.Empty);
-            }
-
-
-            this.Hide();
-            this.Show();
 
         }
 
-        private void partSize_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void PartSize_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ComboBox cmbxPartSize = (ComboBox)sender;
             ListBox listBox;
@@ -86,21 +81,13 @@ namespace NutsonCivilPlugin.PipeOnPV
                 listBox = Structures;
             }
 
-            ListBoxItem lbxItem = (ListBoxItem)listBox.ContainerFromElement(cmbxPartSize);
-            Model el = (Model)lbxItem.Content;
+            Model el = (Model)((ListBoxItem)listBox.ContainerFromElement(cmbxPartSize)).Content;
+            if (!listBox.SelectedItems.Contains(el)) { listBox.SelectedItems.Add(el); }
 
-            if (listBox.SelectedItems.Count>0)
-            {
-                PipeOnPV.SetPartFamily(listBox.SelectedItems, el.PartFamily, (string)cmbxPartSize.SelectedItem);
-            }
-            else
-            {
-                PipeOnPV.SetPartFamily(new List<Model> { el }, el.PartFamily, (string)cmbxPartSize.SelectedItem);
-            }
+            PipeOnPV.SetPartFamily(listBox.SelectedItems, el.PartFamily, (string)cmbxPartSize.SelectedItem);
 
-            this.Hide();
-            this.Show();
 
         }
+
     }
 }

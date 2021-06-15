@@ -210,12 +210,14 @@ namespace NutsonCivilPlugin.PipeOnPV
                     {
                         modelPipe.Part = (Part)tr.GetObject(modelPipe.Part.Id, OpenMode.ForWrite);
                         modelPipe.SetPartFamily(partFamily, PartSizeName);
+
                     }
                     tr.Commit();
                 }
 
             }
-
+            var w=doc.Window;
+            w.Focus();
         }
     }
 

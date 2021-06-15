@@ -29,15 +29,14 @@
                                 <TextBlock Text="{Binding Path=Part.Name}"  Width="100"/>
 
                                 <ComboBox x:Name="pipeFamilyType" 
-                                          ItemsSource="{Binding Path=ListPartFamilyTypes}" 
-                                          SelectedItem="{Binding Path=PartFamily, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                          
-                                          SelectionChanged="ComboBox_SelectionChanged"/>
+                                          ItemsSource="{Binding Path=ListPartFamilyTypes,Mode=OneTime}" 
+                                          SelectedItem="{Binding PartFamily}"
+                                          SelectionChanged="FamilyType_SelectionChanged"/>
                                 
-                                <ComboBox x:Name="pipePartSize" 
+                                <ComboBox x:Name="pipePartSize"  
                                           ItemsSource="{Binding Path=ListPartSizes}" 
-                                          SelectedItem="{Binding Path=PartSize , Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                          SelectionChanged="partSize_SelectionChanged"/>
+                                          SelectedItem="{Binding Path=PartSize }"
+                                          SelectionChanged="PartSize_SelectionChanged"   />
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -58,12 +57,12 @@
 
                                 <ComboBox x:Name="structureFamilyType"
                                           ItemsSource="{Binding Path=ListPartFamilyTypes}" 
-                                          SelectedItem="{Binding Path=PartFamily, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                          SelectionChanged="ComboBox_SelectionChanged"/>
-                                
-                                <ComboBox ItemsSource="{Binding Path=ListPartSizes}"
-                                          SelectedItem="{Binding Path=PartSize, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                          SelectionChanged="partSize_SelectionChanged"/>
+                                          SelectedItem="{Binding Path=PartFamily}"
+                                          SelectionChanged="FamilyType_SelectionChanged"/>
+
+                                <ComboBox ItemsSource="{Binding Path=ListPartSizes, Mode=OneWay}"
+                                          SelectedItem="{Binding Path=PartSize}"
+                                          SelectionChanged="PartSize_SelectionChanged"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
