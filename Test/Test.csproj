@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net48</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<LangVersion>latest</LangVersion>
+		<PlatformTarget>x64</PlatformTarget>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<DebugType>full</DebugType>
+		<OutputPath>C:\Users\Nutson\AppData\Roaming\Autodesk\ApplicationPlugins\Civil3DNutsonApp.bundle\Contents\</OutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AutoCAD2020.Base" Version="1.0.0" ExcludeAssets="runtime"/>
+		<PackageReference Include="Digi-Ants.Civil3D.API.Core" Version="2020.0.0" ExcludeAssets="runtime"/>
+
+		<PackageReference Include="Costura.Fody" Version="6.0.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Extentions\Extentions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Autodesk.AutoCAD.ApplicationServices.Core.Application">
+			<Alias>Application</Alias>
+		</Using>
+		<Using Include="Autodesk.AutoCAD.DatabaseServices.ObjectId">
+			<Alias>ObjectId</Alias>
+		</Using>
+		<Using Include="Extentions" />
+	</ItemGroup>
+
+</Project>

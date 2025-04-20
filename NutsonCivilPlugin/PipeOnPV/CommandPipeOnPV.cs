@@ -1,26 +1,20 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Autodesk.AutoCAD.Runtime;
-using Autodesk.Civil.ApplicationServices;
-using Autodesk.Windows;
 
-namespace NutsonCivilPlugin.PipeOnPV
+namespace NutsonCivilPlugin.PipeOnPV;
+
+class CommandPipeOnPV : System.Windows.Input.ICommand
 {
-    class CommandPipeOnPV : System.Windows.Input.ICommand
+    public event EventHandler? CanExecuteChanged;
+
+    public bool CanExecute(object parameter) => true;
+
+    public void Execute(object parameter)
     {
-        public event EventHandler CanExecuteChanged;
-        public bool CanExecute(object parameter)
+        try
         {
-            return true;
-        }
-        public void Execute(object parameter)
-        {
-            FormWorkWithPipe formWork = new FormWorkWithPipe();
+            var formWork = new FormWorkWithPipe();
             formWork.Show();
-
         }
+        catch (System.Exception) { }
     }
-
 }

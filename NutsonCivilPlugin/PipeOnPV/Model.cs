@@ -1,103 +1,53 @@
-﻿using System.Collections.Generic;
-using Autodesk.Civil.DatabaseServices;
+﻿using Autodesk.Civil.DatabaseServices;
 using Autodesk.Civil.DatabaseServices.Styles;
-using Autodesk.AutoCAD.DatabaseServices;
-using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace NutsonCivilPlugin.PipeOnPV
+namespace NutsonCivilPlugin.PipeOnPV;
+
+public partial class Model : ObservableObject
 {
-    class Model : INotifyPropertyChanged
+    [ObservableProperty]
+    private Part _part = null!;
+
+    [ObservableProperty]
+    private string _partFamily = null!;
+
+    [ObservableProperty]
+    private string _partSize = null!;
+
+    [ObservableProperty]
+    private List<string> _listPartSize = new();
+
+    private readonly Dictionary<string, List<string>> _partSettings;
+    public List<string> ListPartFamilyTypes { get; set; }
+
+    partial void OnPartFamilyChanged(string value) => ListPartSize = _partSettings[value];
+
+    public void SetPartFamily(PartFamily pf, string psName)
     {
-        private Part part;
-        private string partFamily;
-        private string partSize;
-        private Dictionary<string, List<string>> partSettings;
-        public List<string> ListPartFamilyTypes { get; set; }
-        private List<string> listPartSize;
+        var psId = !ListPartSize.Contains(psName) ? pf[0] : pf[psName];
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void OnPropertyChanged([CallerMemberName] string prop = "")
-        {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(prop));
-        }
-        public List<string> ListPartSizes
-        {
-            get
-            {
-                return listPartSize;
-            }
-            set
-            {
-                listPartSize.Clear();
-                listPartSize.AddRange(value);
-                OnPropertyChanged();
-            }
-        }
-
-        public Part Part
-        {
-            get { return part; }
-            set { part = value; }
-        }
-        public string PartFamily
-        {
-            get { return partFamily; }
-            set
-            {
-                partFamily = value;
-                ListPartSizes = partSettings[partFamily];
-                OnPropertyChanged();
-            }
-        }
-
-        public string PartSize
-        {
-            get { return partSize; }
-            set 
-            {
-                partSize = value;
-                OnPropertyChanged();
-            }
-        }
-        public void SetPartFamily(PartFamily pf, string psName)
-        {
-            ObjectId psId;
-            if (!ListPartSizes.Contains(psName))
-            {
-                psId = (ObjectId)pf[0];
-            }
-            else
-            {
-                psId = (ObjectId)pf[psName];
-            }
-
-            part.SwapPartFamilyAndSize(pf.Id, psId);
-
-        }
-        public Model(Part networkPart, Dictionary<string, List<string>> PartSettings)
-        {
-            listPartSize = new List<string>();
-            partSettings = PartSettings;
-            ListPartFamilyTypes = new List<string>(partSettings.Keys);
-            Part = networkPart;
-
-            try
-            {
-                PartFamily = (string)part.GetType().GetProperty("PartFamilyName").GetValue(part);
-            }
-            catch (System.Exception)
-            {
-
-                PartFamily = "Ошибка определения типа семейства";
-            }
-
-            PartSize = part.PartSizeName;
-
-        }
+        Part.SwapPartFamilyAndSize(pf.Id, psId);
+        PartFamily = pf.Name;
+        PartSize = psName;
     }
 
+    public Model(Part networkPart, Dictionary<string, List<string>> partSettings)
+    {
+        _partSettings = partSettings;
+
+        Part = networkPart;
+        ListPartFamilyTypes = new List<string>(_partSettings.Keys);
+
+        try
+        {
+            PartFamily = (string)Part.GetType().GetProperty("PartFamilyName").GetValue(Part);
+        }
+        catch (System.Exception)
+        {
+            PartFamily = "Ошибка определения типа семейства";
+        }
+
+        PartSize = Part.PartType != PartType.StructNull ? Part.PartSizeName : PartFamily;
+    }
 }

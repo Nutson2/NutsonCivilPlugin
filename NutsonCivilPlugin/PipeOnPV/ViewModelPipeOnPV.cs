@@ -1,203 +1,176 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.Collections;
+using System.Collections.ObjectModel;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.Civil.DatabaseServices;
-using System.Collections.ObjectModel;
 using Autodesk.Civil.DatabaseServices.Styles;
-using System.Collections;
+using CommunityToolkit.Mvvm.ComponentModel;
+using NutsonCivilPlugin.AddPipeOnPV;
 
-namespace NutsonCivilPlugin.PipeOnPV
+namespace NutsonCivilPlugin.PipeOnPV;
+
+public partial class ViewModelPipeOnPV : ObservableObject
 {
-    class ViewModelPipeOnPV : INotifyPropertyChanged
+    private readonly Document _doc;
+
+    [ObservableProperty]
+    private ProfileView? _profileView;
+
+    private Network? _network;
+    private NetworkSettings? _networkSettings;
+
+    private List<Part> allPartsFromPV = new();
+
+    public ObservableCollection<Model> modelPipes = new();
+    public ObservableCollection<Model> modelStructures = new();
+
+    public ViewModelPipeOnPV()
     {
-        private ProfileView _pv;
-        private readonly Document doc;
-        private Network network;
-        public ProfileView ProfileView
-        {
-            get { return _pv; }
-            set
-            {
-                _pv = value;
-
-                if (PropertyChanged != null)
-                {
-                    PropertyChanged(this, new PropertyChangedEventArgs("ProfileView"));
-                }
-            }
-        }
-        private List<Part> allPartsFromPV;
-        private NetworkSettings networkSettings;
-
-        public ObservableCollection<Model> modelPipes;
-        public ObservableCollection<Model> modelStructures;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        public ViewModelPipeOnPV()
-        {
-            doc = Application.DocumentManager.MdiActiveDocument;
-            allPartsFromPV = new List<Part>();
-            modelPipes = new ObservableCollection<Model>();
-            modelStructures = new ObservableCollection<Model>();
-        }
-        /// <summary>
-        /// Запрос у пользователя на выбор вида профиля
-        /// </summary>
-        /// <param name="doc"></param>
-        /// <returns></returns>
-        public ProfileView SelectPV(Document doc)
-        {
-            PromptEntityOptions promptEntityOptions = new PromptEntityOptions("\nВыберите вид профиля");
-            promptEntityOptions.AllowNone = false;
-            promptEntityOptions.SetRejectMessage("\nНеобходимо выбрать вид профиля");
-            promptEntityOptions.AddAllowedClass(typeof(ProfileView), true);
-
-            PromptEntityResult res = doc.Editor.GetEntity(promptEntityOptions);
-            if (res.Status == PromptStatus.OK)
-            {
-                using (Transaction tr = doc.TransactionManager.StartTransaction())
-                {
-                    ProfileView = (ProfileView)tr.GetObject(res.ObjectId, OpenMode.ForRead);
-                    return ProfileView;
-                }
-            }
-            return null;
-        }
-        private List<Part> GetNetworkPartsFromPV(Document doc, ProfileView profileView)
-        {
-            List<Part> networksPartOnPv=new List<Part>();
-
-            using (Transaction tr = doc.TransactionManager.StartTransaction())
-            {
-
-                Alignment alignmentPV = (Alignment)tr.GetObject(profileView.AlignmentId, OpenMode.ForRead);
-                AlignmentLine FirstEntity = (AlignmentLine)alignmentPV.Entities.EntityAtId(alignmentPV.Entities.FirstEntity);
-                AlignmentLine LastEntity = (AlignmentLine)alignmentPV.Entities.EntityAtId(alignmentPV.Entities.LastEntity);
-
-                Point2d startPoint = FirstEntity.StartPoint;
-                Point2d endPoint = LastEntity.EndPoint;
-
-                Structure startStructure = GetStructureAtPoint(startPoint);
-                Structure endStructure = GetStructureAtPoint(endPoint);
-
-                if (startStructure.NetworkId == endStructure.NetworkId)
-                {
-                    network = (Network)tr.GetObject(startStructure.NetworkId, OpenMode.ForRead);
-                }
-                double minLength = 0;
-                ObjectIdCollection partsIdOnPV = Network.FindShortestNetworkPath(startStructure.Id, endStructure.Id, ref minLength);
-
-                foreach (ObjectId objectId in partsIdOnPV)
-                {
-                    networksPartOnPv.Add((Part)tr.GetObject(objectId, OpenMode.ForRead));
-                }
-                networksPartOnPv.Add(endStructure);
-
-            }
-            return networksPartOnPv;
-        }
-        /// <summary>
-        /// Подготовка коллекций труб и колодцев с вида профиля для отображения в форме
-        /// </summary>
-        /// <returns></returns>
-        public bool GetNetworkPartsFromPV()
-        {
-            ProfileView = SelectPV(doc);
-            allPartsFromPV = GetNetworkPartsFromPV(doc, ProfileView);
-            networkSettings = new NetworkSettings(doc, network);
-
-            PrepairPartsToShow(modelPipes, DomainType.Pipe);
-            PrepairPartsToShow(modelStructures, DomainType.Structure);
-
-            return true;
-        }
-
-
-        public void PrepairPartsToShow(ObservableCollection<Model> collection, DomainType domainType)
-        {
-
-            Model model;
-            collection.Clear();
-
-            Dictionary<string, List<string>> Partfamily= networkSettings.GetPartFamilys(domainType);
-
-            foreach (Part part in allPartsFromPV)
-            {
-                if (part.Domain==domainType)
-                {
-
-                    model = new Model(part, Partfamily);
-
-                    collection.Add(model);
-                }
-            }
-
-        }
-        private Structure GetStructureAtPoint(Point2d Point)
-        {
-            double offset = 2;
-            Point3dCollection point3DCollection = new Point3dCollection(
-                                                    new Point3d[]{
-                                                            new Point3d(Point.X-offset,Point.Y,0),
-                                                            new Point3d(Point.X,Point.Y+offset,0),
-                                                            new Point3d(Point.X+offset,Point.Y,0),
-                                                            new Point3d(Point.X,Point.Y-offset,0),});
-
-            TypedValue[] filter = { new TypedValue(0, "AECC_STRUCTURE") };
-            SelectionFilter selectionFilter = new SelectionFilter(filter);
-            PromptSelectionResult res = doc.Editor.SelectCrossingPolygon(point3DCollection, selectionFilter);
-
-
-            if (res.Status == PromptStatus.OK && res.Value.Count >= 0)
-            {
-                using (Transaction tr = doc.TransactionManager.StartTransaction())
-                {
-
-                    foreach (ObjectId objectId in res.Value.GetObjectIds())
-                    {
-                        Structure structure = (Structure)tr.GetObject(objectId, OpenMode.ForRead);
-                        ObjectIdCollection pvWithStruct = structure.GetProfileViewsDisplayingMe();
-
-                        foreach (ObjectId pvId in pvWithStruct)
-                        {
-                            if (pvId == ProfileView.Id)
-                            {
-                                return structure;
-                            }
-                        }
-                    }
-
-                }
-            }
-            return null;
-        }
-
-        public void SetPartFamily(IList selectedPipes,string PartFamilyName, string PartSizeName)
-        {
-
-            using (DocumentLock docLock=doc.LockDocument())
-            {
-                using (Transaction tr = doc.TransactionManager.StartTransaction())
-                {
-                    PartFamily partFamily;
-                    partFamily = (PartFamily)tr.GetObject(networkSettings.partsList[PartFamilyName],OpenMode.ForRead);
-
-                    foreach (Model modelPipe in selectedPipes)
-                    {
-                        modelPipe.Part = (Part)tr.GetObject(modelPipe.Part.Id, OpenMode.ForWrite);
-                        modelPipe.SetPartFamily(partFamily, PartSizeName);
-
-                    }
-                    tr.Commit();
-                }
-
-            }
-            var w=doc.Window;
-            w.Focus();
-        }
+        _doc = Application.DocumentManager.MdiActiveDocument;
     }
 
+    /// <summary>
+    /// Запрос у пользователя на выбор вида профиля
+    /// </summary>
+    /// <param name="doc"></param>
+    /// <returns></returns>
+    private List<Part> GetNetworkPartsFromPV(Transaction tr, ProfileView? profileView)
+    {
+        if (profileView is null)
+        {
+            return [];
+        }
+
+        var alignmentPV = profileView.AlignmentId.As<Alignment>();
+
+        var FirstEntity =
+            alignmentPV?.Entities.EntityAtId(alignmentPV.Entities.FirstEntity) as AlignmentLine;
+
+        var LastEntity =
+            alignmentPV?.Entities.EntityAtId(alignmentPV.Entities.LastEntity) as AlignmentLine;
+
+        var startPoint = FirstEntity?.StartPoint;
+        var endPoint = LastEntity?.EndPoint;
+
+        if (startPoint is null || endPoint is null)
+        {
+            return [];
+        }
+
+        var startStructure = GetStructureAtPoint(tr, startPoint.Value);
+        var endStructure = GetStructureAtPoint(tr, endPoint.Value);
+
+        if (
+            startStructure is null
+            || endStructure is null
+            || startStructure.NetworkId != endStructure.NetworkId
+        )
+        {
+            return [];
+        }
+
+        double minLength = 0;
+        var partsIdOnPV = Network.FindShortestNetworkPath(
+            startStructure.Id,
+            endStructure.Id,
+            ref minLength
+        );
+
+        var networksPartOnPv = partsIdOnPV
+            .Cast<ObjectId>()
+            .Select(id => id.As<Part>())
+            .OfType<Part>();
+
+        return [.. networksPartOnPv, endStructure];
+    }
+
+    /// <summary>
+    /// Подготовка коллекций труб и колодцев с вида профиля для отображения в форме
+    /// </summary>
+    /// <returns></returns>
+    public bool GetNetworkPartsFromPV()
+    {
+        using var tr = _doc.TransactionManager.StartTransaction();
+
+        var ProfileViewId = Helper.SelectPV(_doc);
+
+        ProfileView = ProfileViewId.As<ProfileView>();
+
+        allPartsFromPV = GetNetworkPartsFromPV(tr, ProfileView);
+        if (allPartsFromPV.Count == 0)
+        {
+            return false;
+        }
+
+        _network = allPartsFromPV.First().NetworkId.As<Network>();
+        if (_network is null)
+        {
+            return false;
+        }
+
+        _networkSettings = new NetworkSettings(_doc, _network);
+
+        PreparePartsToShow(modelPipes, DomainType.Pipe);
+        PreparePartsToShow(modelStructures, DomainType.Structure);
+
+        return true;
+    }
+
+    public void PreparePartsToShow(ObservableCollection<Model> collection, DomainType domainType)
+    {
+        collection.Clear();
+
+        var PartFamily = _networkSettings!.GetPartFamilys(domainType);
+
+        allPartsFromPV
+            .Where(p => p.Domain == domainType)
+            .Select(p => new Model(p, PartFamily))
+            .ToList()
+            .ForEach(collection.Add);
+    }
+
+    private Structure? GetStructureAtPoint(Transaction tr, Point2d Point)
+    {
+        double offset = 2;
+        var point3DCollection = new Point3dCollection(
+            [
+                new Point3d(Point.X - offset, Point.Y, 0),
+                new Point3d(Point.X, Point.Y + offset, 0),
+                new Point3d(Point.X + offset, Point.Y, 0),
+                new Point3d(Point.X, Point.Y - offset, 0),
+            ]
+        );
+
+        TypedValue[] filter = { new(0, "AECC_STRUCTURE") };
+        var selectionFilter = new SelectionFilter(filter);
+        var res = _doc.Editor.SelectCrossingPolygon(point3DCollection, selectionFilter);
+
+        return res.Status != PromptStatus.OK || res.Value.Count < 0
+            ? null
+            : res
+                .Value.GetObjectIds()
+                .Cast<ObjectId>()
+                .Select(id => id.As<Structure>())
+                .OfType<Structure>()
+                .Where(s => s.GetProfileViewsDisplayingMe().Contains(ProfileView!.Id))
+                .FirstOrDefault();
+    }
+
+    public void SetPartFamily(IList selectedPipes, string PartFamilyName, string PartSizeName)
+    {
+        using var loc = _doc.LockDocument();
+        using var tr = _doc.TransactionManager.StartTransaction();
+
+        var partFamily = _networkSettings?.partsList[PartFamilyName].As<PartFamily>();
+
+        foreach (Model modelPipe in selectedPipes)
+        {
+            modelPipe.Part = modelPipe.Part.Id.As<Part>(OpenMode.ForWrite)!;
+            modelPipe.SetPartFamily(partFamily!, PartSizeName);
+        }
+
+        _doc.Window.Focus();
+    }
 }
