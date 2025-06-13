@@ -2,6 +2,7 @@
 using Autodesk.Aec.PropertyData.DatabaseServices;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Shared.Extensions;
 using Exception = Autodesk.AutoCAD.Runtime.Exception;
 
 namespace NutsonCivilPlugin.PropertySet;

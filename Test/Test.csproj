@@ -9,22 +9,13 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-		<DebugType>full</DebugType>
-		<OutputPath>C:\Users\Nutson\AppData\Roaming\Autodesk\ApplicationPlugins\Civil3DNutsonApp.bundle\Contents\</OutputPath>
-	</PropertyGroup>
-
 	<ItemGroup>
-		<PackageReference Include="AutoCAD2020.Base" Version="1.0.0" ExcludeAssets="runtime"/>
-		<PackageReference Include="Digi-Ants.Civil3D.API.Core" Version="2020.0.0" ExcludeAssets="runtime"/>
+		<PackageReference Include="Speckle.AutoCAD.API" Version="2023.0.0" ExcludeAssets="runtime" />
+		<PackageReference Include="Speckle.Civil3D.API" Version="2023.0.0" ExcludeAssets="runtime" />
 
-		<PackageReference Include="Costura.Fody" Version="6.0.0">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\Extentions\Extentions.csproj" />
+		<ProjectReference Include="..\..\Extentions\Shared.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -34,7 +25,7 @@
 		<Using Include="Autodesk.AutoCAD.DatabaseServices.ObjectId">
 			<Alias>ObjectId</Alias>
 		</Using>
-		<Using Include="Extentions" />
+		<Using Include="Shared.Extensions" />
 	</ItemGroup>
 
 </Project>

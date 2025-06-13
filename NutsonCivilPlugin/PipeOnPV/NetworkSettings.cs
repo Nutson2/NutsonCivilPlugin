@@ -1,31 +1,26 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.Civil.DatabaseServices;
+﻿using Autodesk.Civil.DatabaseServices;
 using Autodesk.Civil.DatabaseServices.Styles;
 
 namespace NutsonCivilPlugin.PipeOnPV;
 
-class NetworkSettings
+public class NetworkSettings
 {
     public PartsList partsList;
     public readonly Dictionary<string, List<string>> pipePartfamily;
     public readonly Dictionary<string, List<string>> structurePartfamily;
 
-    public NetworkSettings(Document doc, Network network)
+    public NetworkSettings(Network network)
     {
-        using var tr = doc.TransactionManager.StartTransaction();
+        partsList = network.PartsListId.As<PartsList>() ?? throw new Exception();
 
-        partsList = network.PartsListId.As<PartsList>() ?? throw new System.Exception();
-
-        pipePartfamily = GetNetworkPartFamily(tr, partsList, DomainType.Pipe);
-        structurePartfamily = GetNetworkPartFamily(tr, partsList, DomainType.Structure);
+        pipePartfamily = GetNetworkPartFamily(partsList, DomainType.Pipe);
+        structurePartfamily = GetNetworkPartFamily(partsList, DomainType.Structure);
     }
 
     public Dictionary<string, List<string>> GetPartFamilys(DomainType domainType) =>
         domainType == DomainType.Pipe ? pipePartfamily : structurePartfamily;
 
     private Dictionary<string, List<string>> GetNetworkPartFamily(
-        Transaction tr,
         PartsList partsList,
         DomainType domainType
     ) =>

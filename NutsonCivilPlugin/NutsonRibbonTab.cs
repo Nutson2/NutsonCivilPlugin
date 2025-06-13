@@ -11,27 +11,28 @@ namespace NutsonCivilPlugin;
 
 public class NutsonRibbonTab : IExtensionApplication
 {
+    private const string TabId = "Nutson";
+    private const string TabTitle = "NCP";
+
+    public void Initialize() => Application.Idle += Application_Idle;
+
+    public void Terminate() { }
+
     [CommandMethod("NutsonRibbon")]
     public void NutsonRibbon()
     {
-        var ribbon = ComponentManager.Ribbon;
-        if (ribbon == null)
+        var NutsonTab = ComponentManager.Ribbon.FindTab(TabId);
+        if (NutsonTab is null)
         {
-            return;
+            NutsonTab = new RibbonTab { Title = TabTitle, Id = TabId };
+            ComponentManager.Ribbon.Tabs.Add(NutsonTab);
+            AddContentOnTab(NutsonTab);
         }
-
-        var NutsonTab = ribbon.FindTab("Nutson");
-        if (NutsonTab != null)
-        {
-            ribbon.Tabs.Remove(NutsonTab);
-        }
-
-        NutsonTab = new RibbonTab { Title = "NCP", Id = "Nutson" };
-        ribbon.Tabs.Add(NutsonTab);
-        AddContentOnTab(NutsonTab);
 
         Application.Idle -= Application_Idle;
     }
+
+    private void Application_Idle(object sender, EventArgs e) => NutsonRibbon();
 
     public void AddContentOnTab(RibbonTab ribbon)
     {
@@ -77,41 +78,7 @@ public class NutsonRibbonTab : IExtensionApplication
             Properties.Resource.pencil_drawing_circles
         );
         ribbonPanelSource.Items.Add(buttonAddPipeOnPV);
-
-        //var buttonTest = new RibbonButton()
-        //{
-        //    Name = "Test",
-        //    Text = "test",
-        //    ShowText = true,
-        //    Size = RibbonItemSize.Large,
-
-        //    CommandHandler = new CommandTest(),
-        //};
-        //buttonTest.LargeImage = ConvertFromBitmap(Properties.Resource.pencil_drawing_circles);
-        //ribbonPanelSource.Items.Add(buttonTest);
     }
-
-    public void Initialize()
-    {
-        Application.Idle += Application_Idle;
-    }
-
-    private void Application_Idle(object sender, EventArgs e)
-    {
-        var ribbon = ComponentManager.Ribbon;
-        if (ribbon == null)
-        {
-            return;
-        }
-
-        var myTab = ribbon.FindTab("Nutson");
-        if (myTab == null)
-        {
-            NutsonRibbon();
-        }
-    }
-
-    public void Terminate() { }
 
     static BitmapSource ConvertFromBitmap(Bitmap bitmap)
     {

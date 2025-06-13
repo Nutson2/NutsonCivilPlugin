@@ -23,15 +23,6 @@ public partial class Model : ObservableObject
 
     partial void OnPartFamilyChanged(string value) => ListPartSize = _partSettings[value];
 
-    public void SetPartFamily(PartFamily pf, string psName)
-    {
-        var psId = !ListPartSize.Contains(psName) ? pf[0] : pf[psName];
-
-        Part.SwapPartFamilyAndSize(pf.Id, psId);
-        PartFamily = pf.Name;
-        PartSize = psName;
-    }
-
     public Model(Part networkPart, Dictionary<string, List<string>> partSettings)
     {
         _partSettings = partSettings;
@@ -39,15 +30,19 @@ public partial class Model : ObservableObject
         Part = networkPart;
         ListPartFamilyTypes = new List<string>(_partSettings.Keys);
 
-        try
-        {
-            PartFamily = (string)Part.GetType().GetProperty("PartFamilyName").GetValue(Part);
-        }
-        catch (System.Exception)
-        {
-            PartFamily = "Ошибка определения типа семейства";
-        }
+        PartFamily =
+            Part.GetType().GetProperty("PartFamilyName")?.GetValue(Part) as string
+            ?? "Ошибка определения типа семейства";
 
         PartSize = Part.PartType != PartType.StructNull ? Part.PartSizeName : PartFamily;
+    }
+
+    public void SetPartFamily(PartFamily pf, string psName)
+    {
+        var psId = !ListPartSize.Contains(psName) ? pf[0] : pf[psName];
+
+        Part.SwapPartFamilyAndSize(pf.Id, psId);
+        PartFamily = pf.Name;
+        PartSize = psName;
     }
 }
