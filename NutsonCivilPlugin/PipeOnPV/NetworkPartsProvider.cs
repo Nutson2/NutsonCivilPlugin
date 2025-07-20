@@ -6,10 +6,16 @@ using Autodesk.Civil.DatabaseServices;
 
 namespace NutsonCivilPlugin.PipeOnPV;
 
+/// <summary>
+/// Провайдер для работы с частями сети
+/// </summary>
 public class NetworkPartsProvider
 {
     private readonly Document _doc;
 
+    /// <summary>
+    /// Инициализирует новый экземпляр класса NetworkPartsProvider
+    /// </summary>
     public NetworkPartsProvider()
     {
         _doc = Application.DocumentManager.MdiActiveDocument;
@@ -18,8 +24,8 @@ public class NetworkPartsProvider
     /// <summary>
     /// Запрос у пользователя на выбор вида профиля
     /// </summary>
-    /// <param name="doc"></param>
-    /// <returns></returns>
+    /// <param name="profileView">Вид профиля</param>
+    /// <returns>Список частей сети</returns>
     public List<Part> GetNetworkPartsFromPV(ProfileView? profileView)
     {
         if (profileView is null)
@@ -70,17 +76,21 @@ public class NetworkPartsProvider
         return [.. networksPartOnPv, endStructure];
     }
 
+    /// <summary>
+    /// Получение структуры по точке
+    /// </summary>
+    /// <param name="Point">Точка</param>
+    /// <param name="profileView">Вид профиля</param>
+    /// <returns>Структура</returns>
     private Structure? GetStructureAtPoint(Point2d Point, ProfileView profileView)
     {
         double offset = 2;
-        var point3DCollection = new Point3dCollection(
-            [
-                new Point3d(Point.X - offset, Point.Y, 0),
-                new Point3d(Point.X, Point.Y + offset, 0),
-                new Point3d(Point.X + offset, Point.Y, 0),
-                new Point3d(Point.X, Point.Y - offset, 0),
-            ]
-        );
+        var point3DCollection = new Point3dCollection([
+            new Point3d(Point.X - offset, Point.Y, 0),
+            new Point3d(Point.X, Point.Y + offset, 0),
+            new Point3d(Point.X + offset, Point.Y, 0),
+            new Point3d(Point.X, Point.Y - offset, 0)
+        ]);
 
         TypedValue[] filter = { new(0, "AECC_STRUCTURE") };
         var selectionFilter = new SelectionFilter(filter);

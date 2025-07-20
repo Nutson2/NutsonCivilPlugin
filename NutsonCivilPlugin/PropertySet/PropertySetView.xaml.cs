@@ -1,12 +1,17 @@
-﻿using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 
 namespace NutsonCivilPlugin.PropertySet;
 
+/// <summary>
+/// Представление для работы с наборами свойств
+/// </summary>
 public partial class PropertySetView : Window
 {
-    PropertySetsManagerViewModel propertySetsManager;
+    private readonly PropertySetsManagerViewModel propertySetsManager;
 
+    /// <summary>
+    /// Инициализирует новый экземпляр класса PropertySetView
+    /// </summary>
     public PropertySetView()
     {
         InitializeComponent();

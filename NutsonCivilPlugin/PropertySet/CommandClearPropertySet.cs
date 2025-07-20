@@ -2,17 +2,31 @@
 using Autodesk.Aec.PropertyData.DatabaseServices;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
-using Shared.Extensions;
 using Exception = Autodesk.AutoCAD.Runtime.Exception;
 
 namespace NutsonCivilPlugin.PropertySet;
 
+/// <summary>
+/// Команда для очистки набора свойств
+/// </summary>
 class CommandClearPropertySet : System.Windows.Input.ICommand
 {
+    /// <summary>
+    /// Событие, которое возникает при изменении возможности выполнения команды
+    /// </summary>
     public event EventHandler? CanExecuteChanged;
 
+    /// <summary>
+    /// Определяет, может ли команда выполняться
+    /// </summary>
+    /// <param name="parameter">Параметр команды</param>
+    /// <returns>Всегда возвращает true</returns>
     public bool CanExecute(object parameter) => true;
 
+    /// <summary>
+    /// Выполняет команду очистки набора свойств
+    /// </summary>
+    /// <param name="parameter">Параметр команды</param>
     public void Execute(object parameter)
     {
         try
@@ -26,8 +40,14 @@ class CommandClearPropertySet : System.Windows.Input.ICommand
     }
 }
 
+/// <summary>
+/// Менеджер для работы с наборами свойств
+/// </summary>
 static class PropertySetManager
 {
+    /// <summary>
+    /// Получает и удаляет определения наборов свойств по имени
+    /// </summary>
     public static void GetAllPropSetDef()
     {
         var doc = Application.DocumentManager.MdiActiveDocument;
@@ -39,25 +59,24 @@ static class PropertySetManager
         var NOD = doc.Database.NamedObjectsDictionaryId.As<DBDictionary>(OpenMode.ForWrite);
         var dict = NOD?.GetAt("AEC_PROPERTY_SET_DEFS").As<DBDictionary>(OpenMode.ForWrite);
 
-        var propNameForDelete = new List<string>();
-
-        foreach (var item in dict)
+        if (dict != null)
         {
-            var key = item.Key;
-            if (key != name && key.Contains(name))
+            var propNameForDelete = dict.Cast<DBDictionaryEntry>()
+                .Select(item => item.Key)
+                .Where(key => key != name && key.Contains(name));
+            
+            foreach (var key in propNameForDelete)
             {
-                propNameForDelete.Add(key);
+                dict.Remove(key);
             }
-        }
-
-        foreach (var key in propNameForDelete)
-        {
-            dict.Remove(key);
         }
 
         tr.Commit();
     }
 
+    /// <summary>
+    /// Альтернативный метод для получения и очистки определений наборов свойств
+    /// </summary>
     public static void GetAllPropSetDef2()
     {
         var doc = Application.DocumentManager.MdiActiveDocument;
@@ -66,13 +85,21 @@ static class PropertySetManager
         var prev = 0;
         for (var i = 0; i < ((dictionary.Records.Count / step) + 1) * step; i += step)
         {
-            prev = delPropDef(doc, prev, i, dictionary);
+            prev = DelPropDef(doc, prev, i, dictionary);
         }
 
         Debug.Print("ok");
     }
 
-    private static int delPropDef(
+    /// <summary>
+    /// Удаляет определения наборов свойств в указанном диапазоне
+    /// </summary>
+    /// <param name="doc">Активный документ</param>
+    /// <param name="prev">Начальный индекс</param>
+    /// <param name="limit">Конечный индекс</param>
+    /// <param name="dictionary">Словарь определений наборов свойств</param>
+    /// <returns>Последний обработанный индекс</returns>
+    private static int DelPropDef(
         Document doc,
         int prev,
         int limit,
@@ -93,7 +120,7 @@ static class PropertySetManager
 
                 var objId = (ObjectId)list[curIndx];
                 var setDef = tr.GetObject(objId, OpenMode.ForWrite) as PropertySetDefinition;
-                if (setDef.LocalizedName.Contains("(") && setDef.LocalizedName.Contains(")"))
+                if (setDef != null && setDef.LocalizedName.Contains("(") && setDef.LocalizedName.Contains(")"))
                 {
                     setDef.Definitions.Clear();
                     setDef.AppliesToFilter.Clear();

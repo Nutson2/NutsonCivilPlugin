@@ -1,10 +1,18 @@
-﻿using Autodesk.Civil.DatabaseServices;
+﻿using Autodesk.AutoCAD.Runtime;
+using Autodesk.Civil.DatabaseServices;
 using Shared;
 
 namespace NutsonCivilPlugin.PipeOnPV;
 
+/// <summary>
+/// Команда для работы с трубами на виде профиля
+/// </summary>
 class CommandPipeOnPV : CivilCommand
 {
+    /// <summary>
+    /// Выполняет команду для работы с трубами на виде профиля
+    /// </summary>
+    [CommandMethod("PipeOnPV")]
     public override void Execute()
     {
         var doc = Application.DocumentManager.MdiActiveDocument;
@@ -15,7 +23,7 @@ class CommandPipeOnPV : CivilCommand
 
         var profileView = modelDataProvider.RequestSelection<ProfileView>(doc).As<ProfileView>();
         profileView.ThrowIfNull();
-        var allPartsFromPV = networkPartsProvider.GetNetworkPartsFromPV(profileView);
+        var allPartsFromPV = networkPartsProvider.GetNetworkPartsFromPV(profileView).ToList();
 
         var _network = allPartsFromPV.First().NetworkId.As<Network>();
         _network.ThrowIfNull();

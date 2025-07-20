@@ -9,11 +9,19 @@ using Shared;
 
 namespace NutsonCivilPlugin.AddPipeOnPV;
 
+/// <summary>
+/// Класс для добавления труб на виде профиля
+/// </summary>
+/// <param name="doc">Документ AutoCAD</param>
+/// <param name="modelDataProvider">Провайдер данных модели</param>
 public class AddPipeOnPV(Document doc, ModelDataProvider modelDataProvider)
 {
     private readonly Document _doc = doc;
     private readonly ModelDataProvider _modelDataProvider = modelDataProvider;
 
+    /// <summary>
+    /// Выполняет основную работу по добавлению труб на виде профиля
+    /// </summary>
     public void Work()
     {
         var profileViewId = _modelDataProvider.RequestSelection<ProfileView>(_doc);
@@ -29,7 +37,7 @@ public class AddPipeOnPV(Document doc, ModelDataProvider modelDataProvider)
             .As<ProfileView>()
             .AsMaybe()
             .Map((pv) => pv.AlignmentId.As<Alignment>())
-            .Map((al) => GetVertexPoints(al))
+            .Map(al => al != null ? GetVertexPoints(al) : new Point3dCollection())
             .Map((pnts) => GetCrossingPipes(_doc, pnts))
             .ToResult("fdfdf")
             .BindZip(
@@ -70,33 +78,33 @@ public class AddPipeOnPV(Document doc, ModelDataProvider modelDataProvider)
 
     private List<Pipe> AddPipesOnProfileView(ProfileView profileView, List<Pipe?> crossingPipes)
     {
-        var res =
-            crossingPipes.Count == 0
-                ? []
-                : crossingPipes
-                    .OfType<Pipe>()
-                    .Where(p => !p.GetProfileViewsDisplayingMe().Contains(profileView.Id))
-                    .ToList();
+        var res = crossingPipes
+            .OfType<Pipe>()
+            .Where(p => !p.GetProfileViewsDisplayingMe().Contains(profileView.Id));
         foreach (var pipe in res)
         {
             pipe.AddToProfileView(profileView.Id);
         }
 
-        return res;
+        return res.ToList();
     }
 
     private List<Pipe?> GetCrossingPipes(Document doc, Point3dCollection point3DCollection)
     {
-        TypedValue[] filter = { new(0, "AECC_PIPE") };
+        TypedValue[] filter = [new(0, "AECC_PIPE")];
         var selectionFilter = new SelectionFilter(filter);
         var res = doc.Editor.SelectFence(point3DCollection, selectionFilter);
-        return res
+        return [.. res
             .Value.GetObjectIds()
             .Cast<ObjectId>()
-            .Select(id => id.As<Pipe>(OpenMode.ForWrite))
-            .ToList();
+            .Select(id => id.As<Pipe>(OpenMode.ForWrite))];
     }
 
+    /// <summary>
+    /// Получает коллекцию точек вершин трассы
+    /// </summary>
+    /// <param name="alignment">Трасса</param>
+    /// <returns>Коллекция точек вершин</returns>
     private Point3dCollection GetVertexPoints(Alignment alignment)
     {
         var points = alignment

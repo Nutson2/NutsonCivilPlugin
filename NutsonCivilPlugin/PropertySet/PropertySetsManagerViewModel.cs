@@ -2,17 +2,29 @@
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Shared.Extensions;
 using AecPropertySet = Autodesk.Aec.PropertyData.DatabaseServices.PropertySet;
 
 namespace NutsonCivilPlugin.PropertySet;
 
+/// <summary>
+/// Модель представления для управления наборами свойств
+/// </summary>
 public class PropertySetsManagerViewModel
 {
     private readonly Document _doc;
+    /// <summary>
+    /// Список всех имен наборов свойств в чертеже
+    /// </summary>
     public List<string> AllDrawingPropsName;
+    
+    /// <summary>
+    /// Количество наборов свойств
+    /// </summary>
     public int PropCount { get; set; }
 
+    /// <summary>
+    /// Инициализирует новый экземпляр класса PropertySetsManagerViewModel
+    /// </summary>
     public PropertySetsManagerViewModel()
     {
         _doc = Application.DocumentManager.MdiActiveDocument;
@@ -27,6 +39,10 @@ public class PropertySetsManagerViewModel
         tr.Commit();
     }
 
+    /// <summary>
+    /// Удаляет выбранные наборы свойств
+    /// </summary>
+    /// <param name="PropNameForDelete">Список имен наборов свойств для удаления</param>
     public void DeleteSelectedProperty(List<string> PropNameForDelete)
     {
         using var loc = _doc.LockDocument();
@@ -81,7 +97,7 @@ public class PropertySetsManagerViewModel
             foreach (ObjectId propId in propsId)
             {
                 var prop = tr.GetObject(propId, OpenMode.ForRead) as AecPropertySet;
-                if (propDefId == prop.PropertySetDefinition)
+                if (prop != null && propDefId == prop.PropertySetDefinition)
                 {
                     propsId.Remove(propId);
                     break;
