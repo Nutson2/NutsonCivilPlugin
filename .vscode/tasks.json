@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "dotrush.task",
+			"project": "c:\\Users\\Nutson\\source\\repos\\_Civil\\NutsonCivilPlugin\\NutsonCivilPlugin\\NutsonCivilPlugin.csproj",
+			"problemMatcher": [],
+			"label": "dotrush: Build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}
