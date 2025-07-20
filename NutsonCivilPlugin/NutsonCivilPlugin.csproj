@@ -14,7 +14,7 @@
 		<PackageReference Include="CSharpFunctionalExtensions" Version="3.6.0" />
 		<PackageReference Include="Speckle.AutoCAD.API" Version="2023.0.0" ExcludeAssets="runtime" />
 		<PackageReference Include="Speckle.Civil3D.API" Version="2023.0.0" ExcludeAssets="runtime" />
-		<PackageReference Include="System.Resources.Extensions" />
+		<PackageReference Include="System.Resources.Extensions" Version="4.7.1" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -32,12 +32,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Using Include="Autodesk.AutoCAD.ApplicationServices.Core.Application">
-			<Alias>Application</Alias>
-		</Using>
-		<Using Include="Autodesk.AutoCAD.DatabaseServices.ObjectId">
-			<Alias>ObjectId</Alias>
-		</Using>
+		<Using Include="Autodesk.AutoCAD.ApplicationServices.Core.Application" Alias="Application"></Using>
+		<Using Include="Autodesk.AutoCAD.DatabaseServices.ObjectId" Alias="ObjectId"></Using>
 		<Using Include="Shared.Extensions" />
 	</ItemGroup>
 </Project>

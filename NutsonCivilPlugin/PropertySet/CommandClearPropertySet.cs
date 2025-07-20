@@ -2,6 +2,7 @@
 using Autodesk.Aec.PropertyData.DatabaseServices;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Shared;
 using Exception = Autodesk.AutoCAD.Runtime.Exception;
 
 namespace NutsonCivilPlugin.PropertySet;
@@ -9,35 +10,13 @@ namespace NutsonCivilPlugin.PropertySet;
 /// <summary>
 /// Команда для очистки набора свойств
 /// </summary>
-class CommandClearPropertySet : System.Windows.Input.ICommand
+class CommandClearPropertySet : CivilCommand
 {
-    /// <summary>
-    /// Событие, которое возникает при изменении возможности выполнения команды
-    /// </summary>
-    public event EventHandler? CanExecuteChanged;
-
-    /// <summary>
-    /// Определяет, может ли команда выполняться
-    /// </summary>
-    /// <param name="parameter">Параметр команды</param>
-    /// <returns>Всегда возвращает true</returns>
-    public bool CanExecute(object parameter) => true;
-
     /// <summary>
     /// Выполняет команду очистки набора свойств
     /// </summary>
     /// <param name="parameter">Параметр команды</param>
-    public void Execute(object parameter)
-    {
-        try
-        {
-            new PropertySetView().ShowDialog();
-        }
-        catch (Exception ex)
-        {
-            Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.ToString());
-        }
-    }
+    public override void Execute() => new PropertySetView().ShowDialog();
 }
 
 /// <summary>
@@ -64,7 +43,7 @@ static class PropertySetManager
             var propNameForDelete = dict.Cast<DBDictionaryEntry>()
                 .Select(item => item.Key)
                 .Where(key => key != name && key.Contains(name));
-            
+
             foreach (var key in propNameForDelete)
             {
                 dict.Remove(key);
@@ -120,7 +99,11 @@ static class PropertySetManager
 
                 var objId = (ObjectId)list[curIndx];
                 var setDef = tr.GetObject(objId, OpenMode.ForWrite) as PropertySetDefinition;
-                if (setDef != null && setDef.LocalizedName.Contains("(") && setDef.LocalizedName.Contains(")"))
+                if (
+                    setDef != null
+                    && setDef.LocalizedName.Contains("(")
+                    && setDef.LocalizedName.Contains(")")
+                )
                 {
                     setDef.Definitions.Clear();
                     setDef.AppliesToFilter.Clear();
