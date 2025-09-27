@@ -24,42 +24,35 @@ public class AddPipeOnPV(Document doc, ModelDataProvider modelDataProvider)
     /// </summary>
     public void Work()
     {
-        var profileViewId = _modelDataProvider.RequestSelection<ProfileView>(_doc);
-        if (profileViewId == ObjectId.Null)
-        {
-            return;
-        }
-
         using var loc = _doc.LockDocument();
         using var tr = _doc.TransactionManager.StartTransaction();
-
-        var crossingPipeIds = profileViewId
-            .As<ProfileView>(tr)
-            .AsMaybe()
-            .Map((pv) => pv.AlignmentId.As<Alignment>(tr))
+        ProfileView profileView = default!;
+        Result
+            .Success(_modelDataProvider.RequestSelection<ProfileView>(_doc, tr, OpenMode.ForWrite))
+            .EnsureNotNull("Selected object is not ProfileView")
+            .Tap(pv => profileView = pv)
+            .Map(pv => pv.AlignmentId.As<Alignment>(tr))
             .Map(al => al != null ? GetVertexPoints(al) : [])
-            .Map((pnts) => GetCrossingPipes(_doc, pnts, tr))
-            .ToResult("fdfdf")
-            .BindZip(
-                (_) => profileViewId.As<ProfileView>(tr, OpenMode.ForWrite).AsMaybe().ToResult("dsd")
-            )
-            .Bind((pair) => ProccessCrossingPipes(profileView: pair.Second, pipeAddedOnProfileView: pair.First, tr));
+            .Map(pnts => GetCrossingPipes(_doc, pnts, tr))
+            .Bind(pipes => ProccessCrossingPipes(profileView, pipes, tr));
 
         tr.Commit();
     }
 
-    private Result<List<PipeOverride>> ProccessCrossingPipes(
+    private static Result<List<PipeOverride>> ProccessCrossingPipes(
         ProfileView profileView,
-        List<Pipe?> pipeAddedOnProfileView, Transaction tr
+        List<Pipe> pipeAddedOnProfileView,
+        Transaction tr
     )
     {
         var pipes = AddPipesOnProfileView(profileView, pipeAddedOnProfileView);
         return OverridePipeViewOnProfileView(profileView, pipes, tr);
     }
 
-    private Result<List<PipeOverride>> OverridePipeViewOnProfileView(
+    private static Result<List<PipeOverride>> OverridePipeViewOnProfileView(
         ProfileView profileView,
-        List<Pipe> pipeAddedOnProfileView, Transaction tr
+        List<Pipe> pipeAddedOnProfileView,
+        Transaction tr
     )
     {
         var styleId = CivilApplication.ActiveDocument.Styles.PipeStyles["Пересекаемая труба"];
@@ -71,13 +64,15 @@ public class AddPipeOnPV(Document doc, ModelDataProvider modelDataProvider)
         foreach (var po in res)
         {
             po.OverrideStyleId = styleId;
-            //PipeProfileLabel.Create(po.PipeId, profileView.Id);
         }
 
         return res;
     }
 
-    private List<Pipe> AddPipesOnProfileView(ProfileView profileView, List<Pipe> crossingPipes)
+    private static List<Pipe> AddPipesOnProfileView(
+        ProfileView profileView,
+        List<Pipe> crossingPipes
+    )
     {
         var res = crossingPipes
             .OfType<Pipe>()
@@ -90,18 +85,19 @@ public class AddPipeOnPV(Document doc, ModelDataProvider modelDataProvider)
         return res.ToList();
     }
 
-    private List<Pipe> GetCrossingPipes(Document doc, Point3dCollection point3DCollection, Transaction tr)
+    private static List<Pipe> GetCrossingPipes(
+        Document doc,
+        Point3dCollection point3DCollection,
+        Transaction tr
+    )
     {
         TypedValue[] filter = [new(0, "AECC_PIPE")];
         var selectionFilter = new SelectionFilter(filter);
         var res = doc.Editor.SelectFence(point3DCollection, selectionFilter);
-        return
-        [
-            .. res
-                .Value.GetObjectIds()
-                .Cast<ObjectId>()
-                .Select(id => id.As<Pipe>(tr,OpenMode.ForWrite)),
-        ];
+        return res?.Value.GetObjectIds()
+                .Select(id => id.As<Pipe>(tr, OpenMode.ForWrite))
+                .OfType<Pipe>()
+                .ToList() ?? [];
     }
 
     /// <summary>
@@ -109,7 +105,7 @@ public class AddPipeOnPV(Document doc, ModelDataProvider modelDataProvider)
     /// </summary>
     /// <param name="alignment">Трасса</param>
     /// <returns>Коллекция точек вершин</returns>
-    private Point3dCollection GetVertexPoints(Alignment alignment)
+    private static Point3dCollection GetVertexPoints(Alignment alignment)
     {
         var points = alignment
             .Entities.OfType<AlignmentCurve>()

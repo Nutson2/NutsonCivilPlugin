@@ -1,4 +1,7 @@
 ﻿using Autodesk.AutoCAD.Runtime;
+using NutsonCivilPlugin.PipeOnPV.Services;
+using NutsonCivilPlugin.PipeOnPV.ViewModels;
+using NutsonCivilPlugin.PipeOnPV.Views;
 using Shared;
 
 namespace NutsonCivilPlugin.PipeOnPV;
@@ -14,11 +17,15 @@ class CommandPipeOnPV : CivilCommand
     [CommandMethod("PipeOnPV")]
     public override void Execute()
     {
-        var doc = Application.DocumentManager.MdiActiveDocument;
-        var modelDataProvider = new ModelDataProvider();
-        var networkPartsProvider = new NetworkPartsProvider();
-        var vm = new ViewModelPipeOnPV(doc, modelDataProvider, networkPartsProvider);
-        var formWork = new FormWorkWithPipe(vm);
-        formWork.Show();
+        try
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var modelDataProvider = new ModelDataProvider();
+            var networkPartsProvider = new NetworkPartsProvider();
+            var vm = new ViewModelPipeOnPV(doc, modelDataProvider, networkPartsProvider);
+            var formWork = new FormWorkWithPipe(vm);
+            formWork.Show();
+        }
+        catch (System.Exception) { }
     }
 }

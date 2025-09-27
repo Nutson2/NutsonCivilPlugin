@@ -1,4 +1,6 @@
 ﻿using System.Drawing;
+using System.IO;
+using System.Reflection;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using Autodesk.AutoCAD.Runtime;
@@ -8,6 +10,27 @@ using NutsonCivilPlugin.PipeOnPV;
 using NutsonCivilPlugin.PropertySet;
 
 namespace NutsonCivilPlugin;
+
+public static class AssemblyResolver
+{
+    public static void RegisterAssemblyResolver(string baseDirectory)
+    {
+        HashSet<string> loadedAssemblies = ["Microsoft.Bcl.HashCode", "CSharpFunctionalExtensions"];
+        AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+        {
+            var name = loadedAssemblies.FirstOrDefault(n => args.Name.StartsWith(n));
+            if (name is not null)
+            {
+                baseDirectory =
+                    @"C:\Users\Nutson\source\repos\_Civil\NutsonCivilPlugin\NutsonCivilPlugin\bin\Debug\net48";
+                string assemblyPath = Path.Combine(baseDirectory, $"{name}.dll");
+                return Assembly.LoadFrom(assemblyPath);
+            }
+
+            return null;
+        };
+    }
+}
 
 /// <summary>
 /// Класс для создания и управления вкладкой ленты Nutson в AutoCAD Civil 3D
@@ -20,7 +43,14 @@ public class NutsonRibbonTab : IExtensionApplication
     /// <summary>
     /// Инициализирует расширение, добавляя обработчик события Idle для создания вкладки ленты
     /// </summary>
-    public void Initialize() => Application.Idle += Application_Idle;
+    public void Initialize()
+    {
+        string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
+        var basePath = Path.GetDirectoryName(thisAssemblyPath);
+        AssemblyResolver.RegisterAssemblyResolver(basePath);
+
+        //Application.Idle += Application_Idle;
+    }
 
     /// <summary>
     /// Завершает работу расширения
@@ -33,6 +63,11 @@ public class NutsonRibbonTab : IExtensionApplication
     [CommandMethod("NutsonRibbon")]
     public void NutsonRibbon()
     {
+        if (ComponentManager.Ribbon is null)
+        {
+            return;
+        }
+
         var NutsonTab = ComponentManager.Ribbon.FindTab(TabId);
         if (NutsonTab is null)
         {
@@ -63,7 +98,7 @@ public class NutsonRibbonTab : IExtensionApplication
             ShowText = true,
             Size = RibbonItemSize.Large,
             CommandHandler = new CommandPipeOnPV(),
-            LargeImage = ConvertFromBitmap(Properties.Resource.plumbing)
+            LargeImage = ConvertFromBitmap(Properties.Resource.plumbing),
         };
         ribbonPanelSource.Items.Add(buttonPipeOnPV);
 
@@ -74,7 +109,7 @@ public class NutsonRibbonTab : IExtensionApplication
             ShowText = true,
             Size = RibbonItemSize.Large,
             CommandHandler = new CommandClearPropertySet(),
-            LargeImage = ConvertFromBitmap(Properties.Resource.dust)
+            LargeImage = ConvertFromBitmap(Properties.Resource.dust),
         };
         ribbonPanelSource.Items.Add(buttonGetPropSetDef);
 
@@ -85,7 +120,7 @@ public class NutsonRibbonTab : IExtensionApplication
             ShowText = true,
             Size = RibbonItemSize.Large,
             CommandHandler = new CommandAddPipeOnPV(),
-            LargeImage = ConvertFromBitmap(Properties.Resource.pencil_drawing_circles)
+            LargeImage = ConvertFromBitmap(Properties.Resource.pencil_drawing_circles),
         };
         ribbonPanelSource.Items.Add(buttonAddPipeOnPV);
     }

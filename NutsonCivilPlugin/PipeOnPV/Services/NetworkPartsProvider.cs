@@ -4,7 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.Civil.DatabaseServices;
 
-namespace NutsonCivilPlugin.PipeOnPV;
+namespace NutsonCivilPlugin.PipeOnPV.Services;
 
 /// <summary>
 /// Провайдер для работы с частями сети
@@ -85,12 +85,14 @@ public class NetworkPartsProvider
     private Structure? GetStructureAtPoint(Point2d Point, ProfileView profileView, Transaction tr)
     {
         double offset = 2;
-        var point3DCollection = new Point3dCollection([
-            new Point3d(Point.X - offset, Point.Y, 0),
-            new Point3d(Point.X, Point.Y + offset, 0),
-            new Point3d(Point.X + offset, Point.Y, 0),
-            new Point3d(Point.X, Point.Y - offset, 0)
-        ]);
+        var point3DCollection = new Point3dCollection(
+            [
+                new Point3d(Point.X - offset, Point.Y, 0),
+                new Point3d(Point.X, Point.Y + offset, 0),
+                new Point3d(Point.X + offset, Point.Y, 0),
+                new Point3d(Point.X, Point.Y - offset, 0),
+            ]
+        );
 
         TypedValue[] filter = { new(0, "AECC_STRUCTURE") };
         var selectionFilter = new SelectionFilter(filter);

@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NutsonCivilPlugin", "Nutson
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "..\Extentions\Shared.csproj", "{31EC4C28-68CE-41C9-9B06-5ED5678FC63E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{FBD1C474-C32F-4370-8F5E-5AE18856ED19}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{31EC4C28-68CE-41C9-9B06-5ED5678FC63E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31EC4C28-68CE-41C9-9B06-5ED5678FC63E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31EC4C28-68CE-41C9-9B06-5ED5678FC63E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FBD1C474-C32F-4370-8F5E-5AE18856ED19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FBD1C474-C32F-4370-8F5E-5AE18856ED19}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FBD1C474-C32F-4370-8F5E-5AE18856ED19}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FBD1C474-C32F-4370-8F5E-5AE18856ED19}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

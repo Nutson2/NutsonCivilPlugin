@@ -1,16 +1,15 @@
-﻿using System.Collections;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.Civil.DatabaseServices;
-using Autodesk.Civil.DatabaseServices.Styles;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CSharpFunctionalExtensions;
+using NutsonCivilPlugin.PipeOnPV.Models;
+using NutsonCivilPlugin.PipeOnPV.Services;
 using Shared;
 
-namespace NutsonCivilPlugin.PipeOnPV;
+namespace NutsonCivilPlugin.PipeOnPV.ViewModels;
 
 /// <summary>
 /// Модель представления для работы с трубами на виде профиля
@@ -21,14 +20,14 @@ public partial class ViewModelPipeOnPV : ObservableObject
     private readonly ModelDataProvider _modelDataProvider;
     private readonly NetworkPartsProvider _networkPartsProvider;
 
-    private ProfileView? _profileView;
-    private NetworkSettings? _networkSettings;
-
-    /// <summary>
-    /// Список всех частей на виде профиля
-    /// </summary>
     [ObservableProperty]
-    private List<Part> _allPartsFromPV;
+    private int _tabIndex;
+
+    [ObservableProperty]
+    private List<PipeModel> _pipes;
+
+    [ObservableProperty]
+    private List<StructModel> _structures;
 
     /// <summary>
     /// Действие, выполняемое после запроса выбора пользователем
@@ -66,27 +65,24 @@ public partial class ViewModelPipeOnPV : ObservableObject
     [RelayCommand]
     private void SelectProfileView()
     {
-        using var tr = _doc.TransactionManager.StartOpenCloseTransaction();
-        Result
-            .Success(_modelDataProvider.RequestSelection<ProfileView>(_doc))
-            .Ensure((id) => id != ObjectId.Null, "ObjectId is invalid")
-            .Map((id) => id.As<ProfileView>(tr))
-            .Tap((pv) => _profileView = pv)
-            .Map((pv) => _networkPartsProvider.GetNetworkPartsFromPV(pv, tr))
-            .Tap((parts) => AllPartsFromPV = parts)
-            .Tap(
-                (parts) =>
-                    _networkSettings = new NetworkSettings(parts.First().NetworkId.As<Network>(tr), tr)
-            )
-            .Tap(() => tr.Commit())
-            .TapError((error) => tr.Abort());
+        BeforeRequestUserPick?.Invoke();
+        try
+        {
+            using var tr = _doc.TransactionManager.StartOpenCloseTransaction();
+            Result
+                .Success(_modelDataProvider.RequestSelection<ProfileView>(_doc, tr))
+                .EnsureNotNull("Selected object is not ProfileView")
+                .Map(pv => _networkPartsProvider.GetNetworkPartsFromPV(pv, tr))
+                .Tap(pv => PreparePartsToShow(pv, tr))
+                .Tap(tr.Commit)
+                .TapError(error => tr.Abort());
+        }
+        catch (Exception ex)
+        {
+            Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(ex.Message);
+        }
 
-        _profileView = _modelDataProvider.RequestSelection<ProfileView>(_doc).As<ProfileView>(tr);
-        AllPartsFromPV = _networkPartsProvider.GetNetworkPartsFromPV(_profileView, tr);
-        var _network = AllPartsFromPV.First().NetworkId.As<Network>(tr);
-        _networkSettings = new NetworkSettings(_network!, tr);
-
-        tr.Commit();
+        AfterRequestUserPick?.Invoke();
     }
 
     /// <summary>
@@ -94,38 +90,56 @@ public partial class ViewModelPipeOnPV : ObservableObject
     /// </summary>
     /// <param name="collection">Коллекция моделей</param>
     /// <param name="domainType">Тип домена (труба или структура)</param>
-    public void PreparePartsToShow(ObservableCollection<Model> collection, DomainType domainType)
+    public void PreparePartsToShow(List<Part> parts, Transaction tr)
     {
-        collection.Clear();
+        NetworkSettings
+            .Create(parts[0].NetworkId, tr)
+            .Tap(ns =>
+            {
+                var pipeParts = ns.GetPartFamilys(DomainType.Pipe);
+                var structParts = ns.GetPartFamilys(DomainType.Structure);
 
-        var PartFamily = _networkSettings!.GetPartFamilys(domainType);
+                (Pipes, Structures) = parts.Aggregate(
+                    (pipes: new List<PipeModel>(), structure: new List<StructModel>()),
+                    (acc, part) =>
+                    {
+                        if (part.Domain == DomainType.Pipe && part is Pipe pipe)
+                        {
+                            acc.pipes.Add(new(pipe, pipeParts));
+                        }
+                        else if (part.Domain == DomainType.Structure && part is Structure structure)
+                        {
+                            acc.structure.Add(new(structure, structParts));
+                        }
 
-        AllPartsFromPV
-            .Where(p => p.Domain == domainType)
-            .Select(p => new Model(p, PartFamily))
-            .ForEach(collection.Add)
-            .ToList();
+                        return acc;
+                    }
+                );
+            });
     }
 
+    [RelayCommand]
     /// <summary>
     /// Устанавливает семейство части для выбранных труб
     /// </summary>
     /// <param name="selectedPipes">Выбранные трубы</param>
     /// <param name="PartFamilyName">Имя семейства части</param>
     /// <param name="PartSizeName">Имя размера части</param>
-    public void SetPartFamily(IList selectedPipes, string PartFamilyName, string PartSizeName)
+    private void ModifyElements()
     {
         using var loc = _doc.LockDocument();
         using var tr = _doc.TransactionManager.StartTransaction();
 
-        var partFamily = _networkSettings?.partsList[PartFamilyName].As<PartFamily>(tr);
-
-        foreach (Model modelPipe in selectedPipes)
+        if (TabIndex == 0)
         {
-            modelPipe.Part = modelPipe.Part.Id.As<Part>(tr, OpenMode.ForWrite)!;
-            modelPipe.SetPartFamily(partFamily!, PartSizeName);
+            Pipes.ForEach(p => p.SetPartFamily(tr));
+        }
+        else
+        {
+            Structures.ForEach(s => s.SetPartFamily(tr));
         }
 
+        tr.Commit();
         _doc.Window.Focus();
     }
 }
