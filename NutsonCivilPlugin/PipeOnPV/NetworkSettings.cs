@@ -1,4 +1,5 @@
-﻿using Autodesk.Civil.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.Civil.DatabaseServices;
 using Autodesk.Civil.DatabaseServices.Styles;
 
 namespace NutsonCivilPlugin.PipeOnPV;
@@ -12,12 +13,12 @@ public class NetworkSettings
     /// Список частей сети
     /// </summary>
     public PartsList partsList;
-    
+
     /// <summary>
     /// Словарь семейств труб и их размеров
     /// </summary>
     public readonly Dictionary<string, List<string>> pipePartfamily;
-    
+
     /// <summary>
     /// Словарь семейств структур и их размеров
     /// </summary>
@@ -27,12 +28,12 @@ public class NetworkSettings
     /// Инициализирует новый экземпляр класса NetworkSettings
     /// </summary>
     /// <param name="network">Сеть трубопроводов</param>
-    public NetworkSettings(Network network)
+    public NetworkSettings(Network network, Transaction tr)
     {
-        partsList = network.PartsListId.As<PartsList>() ?? throw new Exception();
+        partsList = network.PartsListId.As<PartsList>(tr) ?? throw new Exception();
 
-        pipePartfamily = GetNetworkPartFamily(partsList, DomainType.Pipe);
-        structurePartfamily = GetNetworkPartFamily(partsList, DomainType.Structure);
+        pipePartfamily = GetNetworkPartFamily(partsList, DomainType.Pipe, tr);
+        structurePartfamily = GetNetworkPartFamily(partsList, DomainType.Structure, tr);
     }
 
     /// <summary>
@@ -45,19 +46,19 @@ public class NetworkSettings
 
     private Dictionary<string, List<string>> GetNetworkPartFamily(
         PartsList partsList,
-        DomainType domainType
+        DomainType domainType, Transaction tr
     ) =>
         partsList
             .GetPartFamilyIdsByDomain(domainType)
             .Cast<ObjectId>()
-            .Select(id => id.As<PartFamily>())
+            .Select(id => id.As<PartFamily>(tr))
             .OfType<PartFamily>()
             .Select(pf =>
                 (
                     pf.Name,
                     Enumerable
                         .Range(0, pf.PartSizeCount)
-                        .Select(i => pf[i].As<PartSize>()?.Name ?? string.Empty)
+                        .Select(i => pf[i].As<PartSize>(tr)?.Name ?? string.Empty)
                         .ToList()
                 )
             )

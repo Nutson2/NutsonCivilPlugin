@@ -17,7 +17,7 @@ public class CommandTest : CivilCommand
         using var tr = doc.TransactionManager.StartTransaction();
 
         var pipeId = SelectElement(doc, typeof(Pipe));
-        var pipe = pipeId.As<Pipe>(OpenMode.ForWrite);
+        var pipe = pipeId.As<Pipe>(tr, OpenMode.ForWrite);
         if (pipe == null)
         {
             return;

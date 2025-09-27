@@ -26,14 +26,14 @@ public class NetworkPartsProvider
     /// </summary>
     /// <param name="profileView">Вид профиля</param>
     /// <returns>Список частей сети</returns>
-    public List<Part> GetNetworkPartsFromPV(ProfileView? profileView)
+    public List<Part> GetNetworkPartsFromPV(ProfileView? profileView, Transaction tr)
     {
         if (profileView is null)
         {
             return [];
         }
 
-        var alignmentPV = profileView.AlignmentId.As<Alignment>();
+        var alignmentPV = profileView.AlignmentId.As<Alignment>(tr);
 
         var FirstEntity =
             alignmentPV?.Entities.EntityAtId(alignmentPV.Entities.FirstEntity) as AlignmentLine;
@@ -49,8 +49,8 @@ public class NetworkPartsProvider
             return [];
         }
 
-        var startStructure = GetStructureAtPoint(startPoint.Value, profileView);
-        var endStructure = GetStructureAtPoint(endPoint.Value, profileView);
+        var startStructure = GetStructureAtPoint(startPoint.Value, profileView, tr);
+        var endStructure = GetStructureAtPoint(endPoint.Value, profileView, tr);
 
         if (
             startStructure is null
@@ -70,7 +70,7 @@ public class NetworkPartsProvider
 
         var networksPartOnPv = partsIdOnPV
             .Cast<ObjectId>()
-            .Select(id => id.As<Part>())
+            .Select(id => id.As<Part>(tr))
             .OfType<Part>();
 
         return [.. networksPartOnPv, endStructure];
@@ -82,7 +82,7 @@ public class NetworkPartsProvider
     /// <param name="Point">Точка</param>
     /// <param name="profileView">Вид профиля</param>
     /// <returns>Структура</returns>
-    private Structure? GetStructureAtPoint(Point2d Point, ProfileView profileView)
+    private Structure? GetStructureAtPoint(Point2d Point, ProfileView profileView, Transaction tr)
     {
         double offset = 2;
         var point3DCollection = new Point3dCollection([
@@ -101,7 +101,7 @@ public class NetworkPartsProvider
             : res
                 .Value.GetObjectIds()
                 .Cast<ObjectId>()
-                .Select(id => id.As<Structure>())
+                .Select(id => id.As<Structure>(tr))
                 .OfType<Structure>()
                 .Where(s => s.GetProfileViewsDisplayingMe().Contains(profileView!.Id))
                 .FirstOrDefault();

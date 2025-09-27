@@ -3,7 +3,6 @@ using Autodesk.Aec.PropertyData.DatabaseServices;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Shared;
-using Exception = Autodesk.AutoCAD.Runtime.Exception;
 
 namespace NutsonCivilPlugin.PropertySet;
 
@@ -35,8 +34,8 @@ static class PropertySetManager
         using var loc = doc.LockDocument();
         using var tr = doc.Database.TransactionManager.StartTransaction();
 
-        var NOD = doc.Database.NamedObjectsDictionaryId.As<DBDictionary>(OpenMode.ForWrite);
-        var dict = NOD?.GetAt("AEC_PROPERTY_SET_DEFS").As<DBDictionary>(OpenMode.ForWrite);
+        var NOD = doc.Database.NamedObjectsDictionaryId.As<DBDictionary>(tr, OpenMode.ForWrite);
+        var dict = NOD?.GetAt("AEC_PROPERTY_SET_DEFS").As<DBDictionary>(tr, OpenMode.ForWrite);
 
         if (dict != null)
         {
@@ -86,36 +85,34 @@ static class PropertySetManager
     )
     {
         var res = 0;
-        using (var loc = doc.LockDocument())
+        using var loc = doc.LockDocument();
+        using var tr = doc.Database.TransactionManager.StartTransaction();
+
+        var list = dictionary.Records;
+        for (var curIndx = prev; curIndx < limit; curIndx++)
         {
-            using var tr = doc.Database.TransactionManager.StartTransaction();
-            System.Collections.IList list = dictionary.Records;
-            for (var curIndx = prev; curIndx < limit; curIndx++)
+            if (curIndx > dictionary.Records.Count)
             {
-                if (curIndx > dictionary.Records.Count)
-                {
-                    break;
-                }
-
-                var objId = (ObjectId)list[curIndx];
-                var setDef = tr.GetObject(objId, OpenMode.ForWrite) as PropertySetDefinition;
-                if (
-                    setDef != null
-                    && setDef.LocalizedName.Contains("(")
-                    && setDef.LocalizedName.Contains(")")
-                )
-                {
-                    setDef.Definitions.Clear();
-                    setDef.AppliesToFilter.Clear();
-                    var f = setDef.AppliesToFilter;
-                    f.Clear();
-                    setDef.SetAppliesToFilter(f, false);
-                    Debug.Print(@"num: {0}, name {1}", curIndx, setDef.LocalizedName);
-                }
-
-                res = curIndx;
+                break;
             }
 
+            var objId = list[curIndx];
+            var setDef = tr.GetObject(objId, OpenMode.ForWrite) as PropertySetDefinition;
+            if (
+                setDef != null
+                && setDef.LocalizedName.Contains("(")
+                && setDef.LocalizedName.Contains(")")
+            )
+            {
+                setDef.Definitions.Clear();
+                setDef.AppliesToFilter.Clear();
+                var f = setDef.AppliesToFilter;
+                f.Clear();
+                setDef.SetAppliesToFilter(f, false);
+                Debug.Print(@"num: {0}, name {1}", curIndx, setDef.LocalizedName);
+            }
+
+            res = curIndx;
             tr.Commit();
         }
 

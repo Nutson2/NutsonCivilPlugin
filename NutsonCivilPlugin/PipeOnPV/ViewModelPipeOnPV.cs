@@ -6,6 +6,9 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.Civil.DatabaseServices;
 using Autodesk.Civil.DatabaseServices.Styles;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CSharpFunctionalExtensions;
+using Shared;
 
 namespace NutsonCivilPlugin.PipeOnPV;
 
@@ -15,25 +18,28 @@ namespace NutsonCivilPlugin.PipeOnPV;
 public partial class ViewModelPipeOnPV : ObservableObject
 {
     private readonly Document _doc;
+    private readonly ModelDataProvider _modelDataProvider;
+    private readonly NetworkPartsProvider _networkPartsProvider;
 
-    private readonly ProfileView? _profileView;
-    private readonly NetworkSettings? _networkSettings;
+    private ProfileView? _profileView;
+    private NetworkSettings? _networkSettings;
 
     /// <summary>
     /// Список всех частей на виде профиля
     /// </summary>
-    public List<Part> AllPartsFromPV { get; set; }
+    [ObservableProperty]
+    private List<Part> _allPartsFromPV;
 
     /// <summary>
     /// Действие, выполняемое после запроса выбора пользователем
     /// </summary>
     public Action? AfterRequestUserPick { get; internal set; }
-    
+
     /// <summary>
     /// Действие, выполняемое перед запросом выбора пользователем
     /// </summary>
     public Action? BeforeRequestUserPick { get; internal set; }
-    
+
     /// <summary>
     /// Действие, выполняемое при закрытии окна
     /// </summary>
@@ -43,20 +49,44 @@ public partial class ViewModelPipeOnPV : ObservableObject
     /// Инициализирует новый экземпляр класса ViewModelPipeOnPV
     /// </summary>
     /// <param name="doc">Документ AutoCAD</param>
-    /// <param name="profileView">Вид профиля</param>
-    /// <param name="allPartsFromPV">Список всех частей на виде профиля</param>
-    /// <param name="networkSettings">Настройки сети</param>
+    /// <param name="modelDataProvider"></param>
+    /// <param name="networkPartsProvider"></param>
+    /// <param name="networkSettings"></param>
     public ViewModelPipeOnPV(
         Document doc,
-        ProfileView profileView,
-        List<Part> allPartsFromPV,
-        NetworkSettings networkSettings
+        ModelDataProvider modelDataProvider,
+        NetworkPartsProvider networkPartsProvider
     )
     {
         _doc = doc;
-        _profileView = profileView;
-        _networkSettings = networkSettings;
-        AllPartsFromPV = allPartsFromPV;
+        _modelDataProvider = modelDataProvider;
+        _networkPartsProvider = networkPartsProvider;
+    }
+
+    [RelayCommand]
+    private void SelectProfileView()
+    {
+        using var tr = _doc.TransactionManager.StartOpenCloseTransaction();
+        Result
+            .Success(_modelDataProvider.RequestSelection<ProfileView>(_doc))
+            .Ensure((id) => id != ObjectId.Null, "ObjectId is invalid")
+            .Map((id) => id.As<ProfileView>(tr))
+            .Tap((pv) => _profileView = pv)
+            .Map((pv) => _networkPartsProvider.GetNetworkPartsFromPV(pv, tr))
+            .Tap((parts) => AllPartsFromPV = parts)
+            .Tap(
+                (parts) =>
+                    _networkSettings = new NetworkSettings(parts.First().NetworkId.As<Network>(tr), tr)
+            )
+            .Tap(() => tr.Commit())
+            .TapError((error) => tr.Abort());
+
+        _profileView = _modelDataProvider.RequestSelection<ProfileView>(_doc).As<ProfileView>(tr);
+        AllPartsFromPV = _networkPartsProvider.GetNetworkPartsFromPV(_profileView, tr);
+        var _network = AllPartsFromPV.First().NetworkId.As<Network>(tr);
+        _networkSettings = new NetworkSettings(_network!, tr);
+
+        tr.Commit();
     }
 
     /// <summary>
@@ -88,11 +118,11 @@ public partial class ViewModelPipeOnPV : ObservableObject
         using var loc = _doc.LockDocument();
         using var tr = _doc.TransactionManager.StartTransaction();
 
-        var partFamily = _networkSettings?.partsList[PartFamilyName].As<PartFamily>();
+        var partFamily = _networkSettings?.partsList[PartFamilyName].As<PartFamily>(tr);
 
         foreach (Model modelPipe in selectedPipes)
         {
-            modelPipe.Part = modelPipe.Part.Id.As<Part>(OpenMode.ForWrite)!;
+            modelPipe.Part = modelPipe.Part.Id.As<Part>(tr, OpenMode.ForWrite)!;
             modelPipe.SetPartFamily(partFamily!, PartSizeName);
         }
 

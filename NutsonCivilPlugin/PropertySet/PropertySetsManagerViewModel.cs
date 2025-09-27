@@ -16,7 +16,7 @@ public class PropertySetsManagerViewModel
     /// Список всех имен наборов свойств в чертеже
     /// </summary>
     public List<string> AllDrawingPropsName;
-    
+
     /// <summary>
     /// Количество наборов свойств
     /// </summary>
@@ -30,8 +30,8 @@ public class PropertySetsManagerViewModel
         _doc = Application.DocumentManager.MdiActiveDocument;
         using var tr = _doc.Database.TransactionManager.StartTransaction();
 
-        var NOD = _doc.Database.NamedObjectsDictionaryId.As<DBDictionary>(OpenMode.ForWrite);
-        var dict = NOD?.GetAt("AEC_PROPERTY_SET_DEFS").As<DBDictionary>(OpenMode.ForWrite);
+        var NOD = _doc.Database.NamedObjectsDictionaryId.As<DBDictionary>(tr, OpenMode.ForWrite);
+        var dict = NOD?.GetAt("AEC_PROPERTY_SET_DEFS").As<DBDictionary>(tr, OpenMode.ForWrite);
 
         AllDrawingPropsName = dict.Cast<DBDictionaryEntry>().Select(i => i.Key).ToList();
         PropCount = dict?.Count ?? 0;
@@ -48,8 +48,8 @@ public class PropertySetsManagerViewModel
         using var loc = _doc.LockDocument();
         using var tr = _doc.Database.TransactionManager.StartTransaction();
 
-        var NOD = _doc.Database.NamedObjectsDictionaryId.As<DBDictionary>(OpenMode.ForWrite);
-        var dict = NOD?.GetAt("AEC_PROPERTY_SET_DEFS").As<DBDictionary>(OpenMode.ForWrite);
+        var NOD = _doc.Database.NamedObjectsDictionaryId.As<DBDictionary>(tr, OpenMode.ForWrite);
+        var dict = NOD?.GetAt("AEC_PROPERTY_SET_DEFS").As<DBDictionary>(tr, OpenMode.ForWrite);
 
         PropNameForDelete.ForEach(s => dict?.Remove(s));
 
@@ -59,7 +59,7 @@ public class PropertySetsManagerViewModel
     private void RemoveProp(Transaction tr, DBDictionary dict, string PropName)
     {
         var propDefId = (ObjectId)dict[PropName];
-        var PropDef = propDefId.As<PropertySetDefinition>(OpenMode.ForWrite);
+        var PropDef = propDefId.As<PropertySetDefinition>(tr, OpenMode.ForWrite);
 
         if (PropDef is null || PropDef.AppliesToFilter.Count == 0)
         {
@@ -83,9 +83,9 @@ public class PropertySetsManagerViewModel
         result
             .Value.GetObjectIds()
             .Cast<ObjectId>()
-            .Select(id => id.As<DBObject>(OpenMode.ForWrite))
+            .Select(id => id.As<DBObject>(tr, OpenMode.ForWrite))
             .SelectMany(obj => PropertyDataServices.GetPropertySets(obj).Cast<ObjectId>())
-            .Select(propId => propId.As<AecPropertySet>())
+            .Select(propId => propId.As<AecPropertySet>(tr))
             .OfType<AecPropertySet>()
             .Where(prop => propDefId == prop.PropertySetDefinition)
             .ToList();
