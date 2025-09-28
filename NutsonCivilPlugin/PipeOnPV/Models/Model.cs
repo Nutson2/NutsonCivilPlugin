@@ -17,6 +17,9 @@ public partial class Model<T> : ObservableObject
     private string _name;
 
     [ObservableProperty]
+    private BaseEntity _selectedSurface = null!;
+
+    [ObservableProperty]
     private PartFamilyModel _selectedPartFamily = null!;
 
     [ObservableProperty]

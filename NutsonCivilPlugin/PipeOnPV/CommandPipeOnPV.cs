@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.Runtime;
+using Autodesk.Civil.ApplicationServices;
 using NutsonCivilPlugin.PipeOnPV.Services;
 using NutsonCivilPlugin.PipeOnPV.ViewModels;
 using NutsonCivilPlugin.PipeOnPV.Views;
@@ -20,9 +21,17 @@ class CommandPipeOnPV : CivilCommand
         try
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
+            var civilDoc = CivilDocument.GetCivilDocument(doc.Database);
+
             var modelDataProvider = new ModelDataProvider();
             var networkPartsProvider = new NetworkPartsProvider();
-            var vm = new ViewModelPipeOnPV(doc, modelDataProvider, networkPartsProvider);
+            var surfaceProvider = new SurfaceProvider(doc, civilDoc);
+            var vm = new ViewModelPipeOnPV(
+                doc,
+                modelDataProvider,
+                networkPartsProvider,
+                surfaceProvider
+            );
             var formWork = new FormWorkWithPipe(vm);
             formWork.Show();
         }

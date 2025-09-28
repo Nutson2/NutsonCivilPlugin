@@ -19,15 +19,16 @@ public partial class ViewModelPipeOnPV : ObservableObject
     private readonly Document _doc;
     private readonly ModelDataProvider _modelDataProvider;
     private readonly NetworkPartsProvider _networkPartsProvider;
+    private readonly SurfaceProvider _surfaceProvider;
+
+    [ObservableProperty]
+    private ProfileView _profileView;
 
     [ObservableProperty]
     private int _tabIndex;
 
-    [ObservableProperty]
-    private List<PipeModel> _pipes;
-
-    [ObservableProperty]
-    private List<StructModel> _structures;
+    public PipesViewModel PipesVM { get; set; }
+    public StructuresViewModel StructuresVM { get; set; }
 
     /// <summary>
     /// Действие, выполняемое после запроса выбора пользователем
@@ -54,12 +55,14 @@ public partial class ViewModelPipeOnPV : ObservableObject
     public ViewModelPipeOnPV(
         Document doc,
         ModelDataProvider modelDataProvider,
-        NetworkPartsProvider networkPartsProvider
+        NetworkPartsProvider networkPartsProvider,
+        SurfaceProvider surfaceProvider
     )
     {
         _doc = doc;
         _modelDataProvider = modelDataProvider;
         _networkPartsProvider = networkPartsProvider;
+        _surfaceProvider = surfaceProvider;
     }
 
     [RelayCommand]
@@ -72,6 +75,7 @@ public partial class ViewModelPipeOnPV : ObservableObject
             Result
                 .Success(_modelDataProvider.RequestSelection<ProfileView>(_doc, tr))
                 .EnsureNotNull("Selected object is not ProfileView")
+                .Tap(pv => ProfileView = pv)
                 .Map(pv => _networkPartsProvider.GetNetworkPartsFromPV(pv, tr))
                 .Tap(pv => PreparePartsToShow(pv, tr))
                 .Tap(tr.Commit)
@@ -99,7 +103,7 @@ public partial class ViewModelPipeOnPV : ObservableObject
                 var pipeParts = ns.GetPartFamilys(DomainType.Pipe);
                 var structParts = ns.GetPartFamilys(DomainType.Structure);
 
-                (Pipes, Structures) = parts.Aggregate(
+                var (pipes, structures) = parts.Aggregate(
                     (pipes: new List<PipeModel>(), structure: new List<StructModel>()),
                     (acc, part) =>
                     {
@@ -115,6 +119,12 @@ public partial class ViewModelPipeOnPV : ObservableObject
                         return acc;
                     }
                 );
+                var baseEntities = _surfaceProvider
+                    .GetSurfaces()
+                    .ConvertAll(s => new BaseEntity(s.Name, s.Id));
+
+                PipesVM = new() { Parts = pipes, Surfaces = baseEntities };
+                StructuresVM = new() { Parts = structures, Surfaces = baseEntities };
             });
     }
 
@@ -132,11 +142,11 @@ public partial class ViewModelPipeOnPV : ObservableObject
 
         if (TabIndex == 0)
         {
-            Pipes.ForEach(p => p.SetPartFamily(tr));
+            PipesVM.Proccess(tr);
         }
         else
         {
-            Structures.ForEach(s => s.SetPartFamily(tr));
+            StructuresVM.Proccess(tr);
         }
 
         tr.Commit();

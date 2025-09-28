@@ -1,0 +1,71 @@
+﻿<UserControl x:Class="NutsonCivilPlugin.PipeOnPV.Views.Controls.StructureInfo"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:NutsonCivilPlugin.PipeOnPV.Views.Controls"
+             xmlns:viewmodels="clr-namespace:NutsonCivilPlugin.PipeOnPV.ViewModels"
+             d:DataContext="{d:DesignInstance Type=viewmodels:StructuresViewModel}"
+             mc:Ignorable="d">
+   <Grid Background="Transparent">
+      <DataGrid Grid.Row="1"
+                MinHeight="200"
+                AutoGenerateColumns="false"
+                CanUserAddRows="False"
+                SelectionUnit="Cell"
+                SelectionMode="Extended"
+                CanUserReorderColumns="False"
+                CanUserSortColumns="False"
+                DataGridCell.Selected="DataGridCell_Selected"
+                ItemsSource="{Binding Parts}"
+                Background="#66FFFFFF">
+         <DataGrid.Columns>
+            <DataGridTextColumn Header="Имя"
+                                Binding="{Binding Name}"
+                                Width="100" />
+            <!-- Колонка с ComboBox для выбора семейства -->
+            <DataGridTemplateColumn Header="Семейство">
+               <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                     <TextBlock Text="{Binding SelectedPartFamily.Name}" />
+                  </DataTemplate>
+               </DataGridTemplateColumn.CellTemplate>
+               <DataGridTemplateColumn.CellEditingTemplate>
+                  <DataTemplate>
+                     <ComboBox ItemsSource="{Binding PartFamilies}"
+                               SelectedItem="{Binding SelectedPartFamily, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                               DisplayMemberPath="Name" />
+                  </DataTemplate>
+               </DataGridTemplateColumn.CellEditingTemplate>
+            </DataGridTemplateColumn>
+
+            <!-- Колонка с ComboBox для выбора размера (зависит от выбранного семейства) -->
+            <DataGridTemplateColumn Header="Размер">
+               <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                     <TextBlock Text="{Binding SelectedPartSize.Name}" />
+                  </DataTemplate>
+               </DataGridTemplateColumn.CellTemplate>
+
+               <DataGridTemplateColumn.CellEditingTemplate>
+                  <DataTemplate>
+                     <ComboBox ItemsSource="{Binding SelectedPartFamilyPartSizes}"
+                               SelectedItem="{Binding SelectedPartSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                               DisplayMemberPath="Name" />
+                  </DataTemplate>
+               </DataGridTemplateColumn.CellEditingTemplate>
+            </DataGridTemplateColumn>
+
+            <DataGridComboBoxColumn Header="Поверхность"
+                                    ItemsSource="{Binding Surfaces}"
+                                    SelectedItemBinding="{Binding SelectedSurface}" />
+            
+            <DataGridTextColumn Header="Глубина отстойника"
+                                Binding="{Binding HeighOfBottomPart}" />
+            <DataGridTextColumn Header="Полная высота"
+                                Binding="{Binding FullHeigh}" />
+         </DataGrid.Columns>
+      </DataGrid>
+
+   </Grid>
+</UserControl>

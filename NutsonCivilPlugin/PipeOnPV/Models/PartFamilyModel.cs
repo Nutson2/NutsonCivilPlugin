@@ -3,7 +3,7 @@ using Autodesk.Civil.DatabaseServices.Styles;
 
 namespace NutsonCivilPlugin.PipeOnPV.Models;
 
-public class PartFamilyModel : Entity
+public class PartFamilyModel : BaseEntity
 {
     public List<PartSizeModel> PartSizes { get; private set; } = [];
 

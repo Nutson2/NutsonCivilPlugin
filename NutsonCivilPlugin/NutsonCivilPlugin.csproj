@@ -28,10 +28,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Using
-      Include="Autodesk.AutoCAD.ApplicationServices.Core.Application"
-      Alias="Application"
-    ></Using>
+    <Using Include="Autodesk.AutoCAD.ApplicationServices.Core.Application" Alias="Application"></Using>
     <Using Include="Autodesk.AutoCAD.DatabaseServices.ObjectId" Alias="ObjectId"></Using>
     <Using Include="Shared.Extensions" />
   </ItemGroup>

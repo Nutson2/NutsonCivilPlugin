@@ -1,9 +1,16 @@
 ﻿using Autodesk.Civil.DatabaseServices;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace NutsonCivilPlugin.PipeOnPV.Models;
 
-public class PipeModel : Model<Pipe>
+public partial class PipeModel : Model<Pipe>
 {
+    [ObservableProperty]
+    private double _slope;
+
+    [ObservableProperty]
+    private double _offsetFromPreviousPipe;
+
     public PipeModel(Pipe networkPart, List<PartFamilyModel> partSettings)
         : base(networkPart, partSettings) { }
 }

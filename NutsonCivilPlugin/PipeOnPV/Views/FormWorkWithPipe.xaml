@@ -4,118 +4,48 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:vm="clr-namespace:NutsonCivilPlugin.PipeOnPV.ViewModels"
+        xmlns:controls="clr-namespace:NutsonCivilPlugin.PipeOnPV.Views.Controls"
         d:DataContext="{d:DesignInstance Type=vm:ViewModelPipeOnPV}"
         mc:Ignorable="d"
         x:Name="mainWindow"
         Background="AliceBlue"
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterScreen">
-   <Grid >
+   <Grid>
       <Grid.RowDefinitions>
          <RowDefinition Height="35" />
          <RowDefinition Height="*" />
          <RowDefinition Height="auto" />
       </Grid.RowDefinitions>
 
-      <StackPanel Grid.Row="0"
-                  Orientation="Horizontal"
-                  FlowDirection="RightToLeft">
-         <Button x:Name="BtSelectPV"
-                 Margin="5"
-                 Command="{Binding SelectProfileViewCommand}">
-            <TextBlock Text="Выбрать вид профиля"
-                       TextWrapping="Wrap"
-                       TextAlignment="Center"
-                       Padding="2,0,2,0" />
-         </Button>
+      <Grid>
+         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="auto" />
+         </Grid.ColumnDefinitions>
          <TextBlock Margin="5"
+                    HorizontalAlignment="Left"
                     TextWrapping="Wrap"
-                    MinWidth="250"
-                    Background="LightYellow"
+                    MinWidth="200"
                     Text="{Binding Path=ProfileView.Name}"
                     TextAlignment="Center" />
-      </StackPanel>
+
+         <Button HorizontalAlignment="Right"
+                 Grid.Column="1"
+                 Margin="5"
+                 Content="Выбрать вид профиля"
+                 Command="{Binding SelectProfileViewCommand}" />
+      </Grid>
 
       <TabControl Grid.Row="1"
-                  TabIndex="{Binding TabIndex}">
+                  TabIndex="{Binding TabIndex}"
+                  Background="Transparent">
          <TabItem Header="Трубопроводы">
-            <DataGrid MinHeight="200"
-                      AutoGenerateColumns="false"
-                      CanUserAddRows="False"
-                      SelectionUnit="Cell"
-                      SelectionMode="Extended"
-                      CanUserReorderColumns="False"
-                      CanUserSortColumns="False"
-                      DataGridCell.Selected="DataGridCell_Selected"
-                      ItemsSource="{Binding Pipes}">
-               <DataGrid.Columns>
-                  <DataGridTextColumn Header="Имя"
-                                      Binding="{Binding Name}"
-                                      Width="100" />
-                  <!-- Колонка с ComboBox для выбора семейства -->
-                  <DataGridTemplateColumn Header="Семейство">
-                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                           <TextBlock Text="{Binding SelectedPartFamily.Name}" />
-                        </DataTemplate>
-                     </DataGridTemplateColumn.CellTemplate>
-                     <DataGridTemplateColumn.CellEditingTemplate>
-                        <DataTemplate>
-                           <ComboBox ItemsSource="{Binding PartFamilies}"
-                                     SelectedItem="{Binding SelectedPartFamily, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     DisplayMemberPath="Name" />
-                        </DataTemplate>
-                     </DataGridTemplateColumn.CellEditingTemplate>
-                  </DataGridTemplateColumn>
-
-                  <!-- Колонка с ComboBox для выбора размера (зависит от выбранного семейства) -->
-                  <DataGridTemplateColumn Header="Размер">
-                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                           <TextBlock Text="{Binding SelectedPartSize.Name}" />
-                        </DataTemplate>
-                     </DataGridTemplateColumn.CellTemplate>
-                     <DataGridTemplateColumn.CellEditingTemplate>
-                        <DataTemplate>
-                           <ComboBox ItemsSource="{Binding SelectedPartFamilyPartSizes}"
-                                     SelectedItem="{Binding SelectedPartSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     DisplayMemberPath="Name" />
-                        </DataTemplate>
-                     </DataGridTemplateColumn.CellEditingTemplate>
-                  </DataGridTemplateColumn>
-               </DataGrid.Columns>
-            </DataGrid>
+            <controls:PipeInfo />
          </TabItem>
 
          <TabItem Header="Колодцы">
-            <ListBox  x:Name="Structures"
-                      MinHeight="200"
-                      Margin="5"
-                      SelectionMode="Extended"
-                      ItemsSource="{Binding modelStructures}">
-               <ListBox.ItemTemplate>
-                  <DataTemplate>
-                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Тип: "
-                                   Foreground="Gray" />
-                        <TextBlock Text="{Binding Path=Part.Domain}"
-                                   Width="30" />
-                        <TextBlock Text="  Имя: "
-                                   Foreground="Gray" />
-                        <TextBlock Text="{Binding Path=Part.Name}"
-                                   Width="100" />
-
-                        <ComboBox x:Name="structureFamilyType"
-                                  ItemsSource="{Binding Path=ListPartFamilyTypes}"
-                                  SelectedItem="{Binding Path=PartFamily}" />
-
-                        <ComboBox ItemsSource="{Binding Path=ListPartSizes, Mode=OneWay}"
-                                  SelectedItem="{Binding Path=PartSize}" />
-                     </StackPanel>
-                  </DataTemplate>
-               </ListBox.ItemTemplate>
-            </ListBox>
-
+            <controls:StructureInfo />
          </TabItem>
       </TabControl>
       <Button Grid.Row="2"
