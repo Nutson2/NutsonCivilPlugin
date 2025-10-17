@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Shared.Extensions.AutoCad;
 using AecPropertySet = Autodesk.Aec.PropertyData.DatabaseServices.PropertySet;
 
 namespace NutsonCivilPlugin.PropertySet;
@@ -12,6 +13,7 @@ namespace NutsonCivilPlugin.PropertySet;
 public class PropertySetsManagerViewModel
 {
     private readonly Document _doc;
+
     /// <summary>
     /// Список всех имен наборов свойств в чертеже
     /// </summary>

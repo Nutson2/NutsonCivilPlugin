@@ -41,11 +41,11 @@
                   TabIndex="{Binding TabIndex}"
                   Background="Transparent">
          <TabItem Header="Трубопроводы">
-            <controls:PipeInfo />
+            <controls:PipeInfo DataContext="{Binding PipesVM}"/>
          </TabItem>
 
          <TabItem Header="Колодцы">
-            <controls:StructureInfo />
+            <controls:StructureInfo DataContext="{Binding StructuresVM}"/>
          </TabItem>
       </TabControl>
       <Button Grid.Row="2"

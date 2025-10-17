@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:NutsonCivilPlugin.PipeOnPV.Views.Controls"
              xmlns:viewmodels="clr-namespace:NutsonCivilPlugin.PipeOnPV.ViewModels"
              d:DataContext="{d:DesignInstance Type=viewmodels:StructuresViewModel}"
+             x:Name="control"
              mc:Ignorable="d">
    <Grid Background="Transparent">
       <DataGrid Grid.Row="1"
@@ -56,10 +57,22 @@
                </DataGridTemplateColumn.CellEditingTemplate>
             </DataGridTemplateColumn>
 
-            <DataGridComboBoxColumn Header="Поверхность"
-                                    ItemsSource="{Binding Surfaces}"
-                                    SelectedItemBinding="{Binding SelectedSurface}" />
-            
+            <DataGridTemplateColumn Header="Поверхность">
+               <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                     <TextBlock Text="{Binding SelectedSurface.Name}" />
+                  </DataTemplate>
+               </DataGridTemplateColumn.CellTemplate>
+
+               <DataGridTemplateColumn.CellEditingTemplate>
+                  <DataTemplate>
+                     <ComboBox ItemsSource="{Binding ElementName=control, Path=DataContext.Surfaces}"
+                               SelectedItem="{Binding SelectedSurface, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                               DisplayMemberPath="Name" />
+                  </DataTemplate>
+               </DataGridTemplateColumn.CellEditingTemplate>
+            </DataGridTemplateColumn>
+
             <DataGridTextColumn Header="Глубина отстойника"
                                 Binding="{Binding HeighOfBottomPart}" />
             <DataGridTextColumn Header="Полная высота"

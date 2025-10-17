@@ -27,8 +27,8 @@ public partial class ViewModelPipeOnPV : ObservableObject
     [ObservableProperty]
     private int _tabIndex;
 
-    public PipesViewModel PipesVM { get; set; }
-    public StructuresViewModel StructuresVM { get; set; }
+    public PipesViewModel PipesVM { get; } = new();
+    public StructuresViewModel StructuresVM { get; } = new();
 
     /// <summary>
     /// Действие, выполняемое после запроса выбора пользователем
@@ -109,22 +109,25 @@ public partial class ViewModelPipeOnPV : ObservableObject
                     {
                         if (part.Domain == DomainType.Pipe && part is Pipe pipe)
                         {
-                            acc.pipes.Add(new(pipe, pipeParts));
+                            acc.pipes.Add(new(pipe, pipeParts, tr));
                         }
                         else if (part.Domain == DomainType.Structure && part is Structure structure)
                         {
-                            acc.structure.Add(new(structure, structParts));
+                            acc.structure.Add(new(structure, structParts, tr));
                         }
 
                         return acc;
                     }
                 );
                 var baseEntities = _surfaceProvider
-                    .GetSurfaces()
+                    .GetSurfaces(tr)
                     .ConvertAll(s => new BaseEntity(s.Name, s.Id));
 
-                PipesVM = new() { Parts = pipes, Surfaces = baseEntities };
-                StructuresVM = new() { Parts = structures, Surfaces = baseEntities };
+                PipesVM.Parts = pipes;
+                PipesVM.Surfaces = baseEntities;
+
+                StructuresVM.Parts = structures;
+                StructuresVM.Surfaces = baseEntities;
             });
     }
 
@@ -148,6 +151,13 @@ public partial class ViewModelPipeOnPV : ObservableObject
         {
             StructuresVM.Proccess(tr);
         }
+
+        PipeAligningService.AlignPipes(
+            PipesVM.Parts,
+            StructuresVM.Parts.FirstOrDefault()!,
+            PipesVM.AlignPipesSettings,
+            tr
+        );
 
         tr.Commit();
         _doc.Window.Focus();

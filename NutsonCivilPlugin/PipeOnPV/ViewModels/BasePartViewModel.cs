@@ -10,8 +10,10 @@ public partial class BasePartViewModel<TModel, T> : ObservableObject
     where T : Part
 {
     [ObservableProperty]
-    private List<TModel> _parts;
-    public List<BaseEntity> Surfaces { get; set; }
+    private List<TModel> _parts = [];
+
+    [ObservableProperty]
+    private List<BaseEntity> _surfaces = [];
 
     internal void Proccess(Transaction tr)
     {

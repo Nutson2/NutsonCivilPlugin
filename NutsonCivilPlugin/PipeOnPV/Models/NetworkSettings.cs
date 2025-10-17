@@ -2,6 +2,7 @@
 using Autodesk.Civil.DatabaseServices;
 using Autodesk.Civil.DatabaseServices.Styles;
 using CSharpFunctionalExtensions;
+using Shared.Extensions.AutoCad;
 
 namespace NutsonCivilPlugin.PipeOnPV.Models;
 

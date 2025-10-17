@@ -6,6 +6,7 @@ using Autodesk.Civil.ApplicationServices;
 using Autodesk.Civil.DatabaseServices;
 using CSharpFunctionalExtensions;
 using Shared;
+using Shared.Extensions.AutoCad;
 
 namespace NutsonCivilPlugin.AddPipeOnPV;
 

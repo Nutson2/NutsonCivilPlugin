@@ -25,7 +25,7 @@ class CommandPipeOnPV : CivilCommand
 
             var modelDataProvider = new ModelDataProvider();
             var networkPartsProvider = new NetworkPartsProvider();
-            var surfaceProvider = new SurfaceProvider(doc, civilDoc);
+            var surfaceProvider = new SurfaceProvider(civilDoc);
             var vm = new ViewModelPipeOnPV(
                 doc,
                 modelDataProvider,

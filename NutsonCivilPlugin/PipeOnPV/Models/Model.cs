@@ -2,6 +2,7 @@
 using Autodesk.Civil.DatabaseServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CSharpFunctionalExtensions;
+using Shared.Extensions.AutoCad;
 
 namespace NutsonCivilPlugin.PipeOnPV.Models;
 
@@ -11,7 +12,7 @@ namespace NutsonCivilPlugin.PipeOnPV.Models;
 public partial class Model<T> : ObservableObject
     where T : Part
 {
-    private readonly T _networkPart;
+    public T NetworkPart { get; }
 
     [ObservableProperty]
     private string _name;
@@ -41,15 +42,17 @@ public partial class Model<T> : ObservableObject
     /// </summary>
     /// <param name="networkPart">Часть сети</param>
     /// <param name="partSettings">Настройки частей</param>
-    public Model(T networkPart, List<PartFamilyModel> partSettings)
+    public Model(T networkPart, List<PartFamilyModel> partSettings, Transaction tr)
     {
-        _networkPart = networkPart;
+        NetworkPart = networkPart;
         Name = networkPart.Name;
         PartFamilies = partSettings;
         SelectedPartFamily = partSettings.First(pf => pf.Id == networkPart.PartFamilyId);
         SelectedPartSize = SelectedPartFamily.PartSizes.FirstOrDefault(ps =>
             ps.Name == networkPart.PartSizeName
         );
+        var surface = networkPart.RefSurfaceId.As<TinSurface>(tr);
+        SelectedSurface = new BaseEntity(surface.Name, surface.Id);
     }
 
     /// <summary>
@@ -58,7 +61,7 @@ public partial class Model<T> : ObservableObject
     /// <param name="pf">Семейство части</param>
     /// <param name="psName">Имя размера части</param>
     public void SetPartFamily(Transaction tr) =>
-        _networkPart
+        NetworkPart
             .Id.As<T>(tr, OpenMode.ForWrite)
             .AsMaybe()
             .Execute(part =>

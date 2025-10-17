@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.Civil.DatabaseServices;
+using Shared.Extensions.AutoCad;
 
 namespace NutsonCivilPlugin.PipeOnPV.Services;
 
@@ -85,16 +86,18 @@ public class NetworkPartsProvider
     private Structure? GetStructureAtPoint(Point2d Point, ProfileView profileView, Transaction tr)
     {
         double offset = 2;
+        var point3d = new Point3d(Point.X, Point.Y, 0);
+
         var point3DCollection = new Point3dCollection(
             [
-                new Point3d(Point.X - offset, Point.Y, 0),
-                new Point3d(Point.X, Point.Y + offset, 0),
-                new Point3d(Point.X + offset, Point.Y, 0),
-                new Point3d(Point.X, Point.Y - offset, 0),
+                point3d.WithX(Point.X - offset),
+                point3d.WithY(Point.Y + offset),
+                point3d.WithX(Point.X + offset),
+                point3d.WithY(Point.Y - offset),
             ]
         );
 
-        TypedValue[] filter = { new(0, "AECC_STRUCTURE") };
+        TypedValue[] filter = [new(0, "AECC_STRUCTURE")];
         var selectionFilter = new SelectionFilter(filter);
         var res = _doc.Editor.SelectCrossingPolygon(point3DCollection, selectionFilter);
 
@@ -102,10 +105,8 @@ public class NetworkPartsProvider
             ? null
             : res
                 .Value.GetObjectIds()
-                .Cast<ObjectId>()
                 .Select(id => id.As<Structure>(tr))
                 .OfType<Structure>()
-                .Where(s => s.GetProfileViewsDisplayingMe().Contains(profileView!.Id))
-                .FirstOrDefault();
+                .FirstOrDefault(s => s.GetProfileViewsDisplayingMe().Contains(profileView!.Id));
     }
 }
