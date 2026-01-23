@@ -11,6 +11,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="CSharpFunctionalExtensions" Version="3.6.0" />
     <PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
+    <PackageReference Include="SimpleInjector" Version="5.5.0" />
     <PackageReference Include="Speckle.AutoCAD.API" Version="2023.0.0" ExcludeAssets="runtime" />
     <PackageReference Include="Speckle.Civil3D.API" Version="2023.0.0" ExcludeAssets="runtime" />
   </ItemGroup>
@@ -22,7 +23,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Extentions\Shared.csproj" />
+    <ProjectReference Include="..\..\Extentions\AcadShared.csproj" />
+    <ProjectReference Include="..\WIndows\Windows.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Windows.Forms" />
@@ -44,5 +46,8 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="PipeOnPV\Models\" />
   </ItemGroup>
 </Project>

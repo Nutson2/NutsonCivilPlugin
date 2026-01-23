@@ -1,12 +1,12 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
+﻿using AcadShared.Extensions.AutoCad;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.Civil.ApplicationServices;
 using Autodesk.Civil.DatabaseServices;
 using CSharpFunctionalExtensions;
-using Shared;
-using Shared.Extensions.AutoCad;
+using Shared.Contracts;
 
 namespace NutsonCivilPlugin.AddPipeOnPV;
 
@@ -15,10 +15,10 @@ namespace NutsonCivilPlugin.AddPipeOnPV;
 /// </summary>
 /// <param name="doc">Документ AutoCAD</param>
 /// <param name="modelDataProvider">Провайдер данных модели</param>
-public class AddPipeOnPV(Document doc, ModelDataProvider modelDataProvider)
+public class AddPipeOnPV(Document doc, ISelectionService<ProfileView> modelDataProvider)
 {
     private readonly Document _doc = doc;
-    private readonly ModelDataProvider _modelDataProvider = modelDataProvider;
+    private readonly ISelectionService<ProfileView> _modelDataProvider = modelDataProvider;
 
     /// <summary>
     /// Выполняет основную работу по добавлению труб на виде профиля
@@ -28,14 +28,13 @@ public class AddPipeOnPV(Document doc, ModelDataProvider modelDataProvider)
         using var loc = _doc.LockDocument();
         using var tr = _doc.TransactionManager.StartTransaction();
         ProfileView profileView = default!;
-        Result
-            .Success(_modelDataProvider.RequestSelection<ProfileView>(_doc, tr, OpenMode.ForWrite))
-            .EnsureNotNull("Selected object is not ProfileView")
-            .Tap(pv => profileView = pv)
-            .Map(pv => pv.AlignmentId.As<Alignment>(tr))
-            .Map(al => al != null ? GetVertexPoints(al) : [])
-            .Map(pnts => GetCrossingPipes(_doc, pnts, tr))
-            .Bind(pipes => ProccessCrossingPipes(profileView, pipes, tr));
+        _modelDataProvider.RequestSelection()
+             .ToResult("Selected object is not ProfileView")
+             .Tap(pv => profileView = pv)
+             .Map(pv => pv.AlignmentId.As<Alignment>(tr))
+             .Map(al => al != null ? GetVertexPoints(al) : [])
+             .Map(pnts => GetCrossingPipes(_doc, pnts, tr))
+             .Bind(pipes => ProccessCrossingPipes(profileView, pipes, tr));
 
         tr.Commit();
     }

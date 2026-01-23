@@ -1,8 +1,8 @@
-﻿using Autodesk.Aec.PropertyData.DatabaseServices;
+﻿using AcadShared.Extensions.AutoCad;
+using Autodesk.Aec.PropertyData.DatabaseServices;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Shared.Extensions.AutoCad;
 using AecPropertySet = Autodesk.Aec.PropertyData.DatabaseServices.PropertySet;
 
 namespace NutsonCivilPlugin.PropertySet;
